@@ -1,0 +1,386 @@
+//// ASCII transliteration and slug generation utilities.
+////
+//// This module provides pragmatic tools for converting Unicode text to ASCII
+//// and generating URL-friendly slugs. Uses curated replacement tables
+//// optimized for Latin-based scripts and common ligatures.
+//// OTP-free core with optional normalizer injection for production use.
+
+import gleam/list
+import gleam/string
+import str/internal_decompose
+import str/internal_translit
+
+/// Core ASCII folding implementation with optional decomposition.
+/// Applies replacement tables, optionally decomposes Latin chars and removes
+/// combining marks. Internal use only.
+fn ascii_fold_full(s: String, decompose: Bool) -> String {
+  // Use the centralized replacement table from the internal module.
+  let reps = internal_translit.replacements()
+
+  // Apply replacement table first (handles precomposed characters)
+  let replaced =
+    list.fold(reps, s, fn(acc, pair) {
+      case pair {
+        [from, to] -> string.replace(acc, from, to)
+        _ -> acc
+      }
+    })
+
+  // Optionally decompose (expand precomposed letters) and then remove
+  // combining marks. Decomposition is limited to Latin ranges and is
+  // performed in pure Gleam by `internal_decompose`.
+  case decompose {
+    True ->
+      list.fold(
+        internal_translit.replacements(),
+        replaced
+          |> internal_decompose.decompose_latin
+          |> internal_translit.remove_combining_marks,
+        fn(acc, pair) {
+          case pair {
+            [from, to] -> string.replace(acc, from, to)
+            _ -> acc
+          }
+        },
+      )
+    False -> replaced
+  }
+}
+
+/// Converts Unicode text to ASCII equivalents.
+/// Applies replacement tables, decomposes Latin chars and removes combining marks.
+///
+///   ascii_fold("café") -> "cafe"
+///   ascii_fold("straße") -> "strasse"
+///   ascii_fold("Crème Brûlée") -> "Creme Brulee"
+///
+pub fn ascii_fold(s: String) -> String {
+  ascii_fold_full(s, True)
+}
+
+/// ASCII folding without decomposition step.
+/// Applies only the replacement table, preserving combining marks.
+///
+///   ascii_fold_no_decompose("café") -> "cafe"
+///
+pub fn ascii_fold_no_decompose(s: String) -> String {
+  ascii_fold_full(s, False)
+}
+
+/// ASCII folding with custom normalizer for production Unicode handling.
+/// The normalizer (typically OTP's :unicode module) is applied between
+/// decomposition and combining mark removal.
+///
+///   ascii_fold_with_normalizer("café", my_nfd) -> "cafe"
+///
+pub fn ascii_fold_with_normalizer(s: String, normalizer) -> String {
+  // Manually inline the same pipeline as `ascii_fold_full`, but call
+  // the `normalizer` function (provided by the caller) between
+  // decomposition and combining-mark removal.
+  let reps = internal_translit.replacements()
+
+  let replaced =
+    list.fold(reps, s, fn(acc, pair) {
+      case pair {
+        [from, to] -> string.replace(acc, from, to)
+        _ -> acc
+      }
+    })
+
+  let decomposed = replaced |> internal_decompose.decompose_latin
+  let normalized = normalizer(decomposed)
+
+  list.fold(
+    internal_translit.replacements(),
+    normalized |> internal_translit.remove_combining_marks,
+    fn(acc, pair) {
+      case pair {
+        [from, to] -> string.replace(acc, from, to)
+        _ -> acc
+      }
+    },
+  )
+}
+
+/// ASCII folding without decomposition, with custom normalizer.
+pub fn ascii_fold_no_decompose_with_normalizer(s: String, normalizer) -> String {
+  let reps = internal_translit.replacements()
+
+  let replaced =
+    list.fold(reps, s, fn(acc, pair) {
+      case pair {
+        [from, to] -> string.replace(acc, from, to)
+        _ -> acc
+      }
+    })
+
+  // In the no-decompose variant we still allow the caller to run a
+  // normalizer if they wish; otherwise they can pass identity.
+  let normalized = normalizer(replaced)
+
+  list.fold(reps, normalized, fn(acc, pair) {
+    case pair {
+      [from, to] -> string.replace(acc, from, to)
+      _ -> acc
+    }
+  })
+}
+
+// Simple helpers used by slugify
+fn trim_leading_sep(gs: List(String), sep: String) -> List(String) {
+  case gs {
+    [] -> []
+    [first, ..rest] ->
+      case first == sep {
+        True -> trim_leading_sep(rest, sep)
+        False -> gs
+      }
+  }
+}
+
+fn trim_surrounding_sep(gs: List(String), sep: String) -> List(String) {
+  list.reverse(trim_leading_sep(list.reverse(trim_leading_sep(gs, sep)), sep))
+}
+
+fn is_ascii_digit(code: Int) -> Bool {
+  code >= 0x30 && code <= 0x39
+}
+
+fn is_ascii_lower(code: Int) -> Bool {
+  code >= 0x61 && code <= 0x7A
+}
+
+fn is_alnum_grapheme(g: String) -> Bool {
+  case string.to_utf_codepoints(g) {
+    [cp] ->
+      case string.utf_codepoint_to_int(cp) {
+        n -> is_ascii_digit(n) || is_ascii_lower(n)
+      }
+    _ -> False
+  }
+}
+
+/// Creates a URL-friendly slug from text.
+/// Uses default settings: hyphen separator, no token limit, ASCII output.
+///
+///   slugify("Hello, World!") -> "hello-world"
+///   slugify("Café & Bar") -> "cafe-bar"
+///
+pub fn slugify(s: String) -> String {
+  slugify_opts(s, -1, "-", False)
+}
+
+/// Creates a slug using a custom normalizer function.
+///
+///   slugify_with_normalizer("Café", my_nfd) -> "cafe"
+///
+pub fn slugify_with_normalizer(s: String, normalizer) -> String {
+  slugify_opts_with_normalizer(s, -1, "-", False, normalizer)
+}
+
+/// Converts text to kebab-case (lowercase with hyphens).
+///
+///   to_kebab_case("Hello World") -> "hello-world"
+///
+pub fn to_kebab_case(s: String) -> String {
+  slugify(s)
+}
+
+/// Creates a slug with configurable options.
+/// max_len limits tokens (-1 for unlimited), sep is the separator,
+/// preserve_unicode keeps Unicode chars if True.
+///
+///   slugify_opts("one two three", 2, "-", False) -> "one-two"
+///   slugify_opts("Hello World", -1, "_", False) -> "hello_world"
+///
+pub fn slugify_opts(
+  s: String,
+  max_len: Int,
+  sep: String,
+  preserve_unicode: Bool,
+) -> String {
+  let base = case preserve_unicode {
+    True -> string.lowercase(s)
+    False -> ascii_fold(s) |> string.lowercase
+  }
+  let clusters = string.to_graphemes(base)
+
+  let raw =
+    list.fold(clusters, "", fn(acc, g) {
+      case preserve_unicode {
+        True ->
+          case string.trim(g) == "" {
+            True ->
+              case acc == "" || string.ends_with(acc, sep) {
+                True -> acc
+                False -> acc <> sep
+              }
+            False -> acc <> g
+          }
+        False ->
+          case is_alnum_grapheme(g) {
+            True -> acc <> g
+            False ->
+              case acc == "" || string.ends_with(acc, sep) {
+                True -> acc
+                False -> acc <> sep
+              }
+          }
+      }
+    })
+
+  let trimmed = trim_surrounding_sep(string.to_graphemes(raw), sep)
+
+  let joined = list.fold(trimmed, "", fn(acc, c) { acc <> c })
+
+  let tokens = string.split(joined, sep)
+  let taken = case max_len > 0 {
+    True -> list.take(tokens, max_len)
+    False -> tokens
+  }
+  let result =
+    list.fold(taken, "", fn(acc, t) {
+      case acc == "" {
+        True -> acc <> t
+        False -> acc <> sep <> t
+      }
+    })
+
+  result
+}
+
+/// Creates a slug with full options and custom normalizer.
+///
+///   slugify_opts_with_normalizer("Crème Brûlée", 2, "-", False, my_nfd) -> "creme-brulee"
+///
+pub fn slugify_opts_with_normalizer(
+  s: String,
+  max_len: Int,
+  sep: String,
+  preserve_unicode: Bool,
+  normalizer,
+) -> String {
+  let base = case preserve_unicode {
+    True -> string.lowercase(s)
+    False -> ascii_fold_with_normalizer(s, normalizer) |> string.lowercase
+  }
+
+  let clusters = string.to_graphemes(base)
+
+  let raw =
+    list.fold(clusters, "", fn(acc, g) {
+      case preserve_unicode {
+        True ->
+          case string.trim(g) == "" {
+            True ->
+              case acc == "" || string.ends_with(acc, sep) {
+                True -> acc
+                False -> acc <> sep
+              }
+            False -> acc <> g
+          }
+        False ->
+          case is_alnum_grapheme(g) {
+            True -> acc <> g
+            False ->
+              case acc == "" || string.ends_with(acc, sep) {
+                True -> acc
+                False -> acc <> sep
+              }
+          }
+      }
+    })
+
+  let trimmed = trim_surrounding_sep(string.to_graphemes(raw), sep)
+  let joined = list.fold(trimmed, "", fn(acc, c) { acc <> c })
+
+  let tokens = string.split(joined, sep)
+  let taken = case max_len > 0 {
+    True -> list.take(tokens, max_len)
+    False -> tokens
+  }
+  let result =
+    list.fold(taken, "", fn(acc, t) {
+      case acc == "" {
+        True -> acc <> t
+        False -> acc <> sep <> t
+      }
+    })
+
+  result
+}
+
+/// Converts text to snake_case (lowercase with underscores).
+///
+///   to_snake_case("Hello World") -> "hello_world"
+///
+pub fn to_snake_case(s: String) -> String {
+  slugify(s) |> string.replace("-", "_")
+}
+
+/// Converts text to camelCase.
+/// First word is lowercase, subsequent words are capitalized.
+///
+///   to_camel_case("hello world") -> "helloWorld"
+///   to_camel_case("get user by id") -> "getUserById"
+///
+pub fn to_camel_case(s: String) -> String {
+  let parts = string.split(slugify(s), "-")
+  list.fold(parts, "", fn(acc, part) {
+    case string.length(part) == 0 {
+      True -> acc
+      False ->
+        case acc == "" {
+          True -> acc <> part
+          False ->
+            acc
+            <> string.uppercase(string.slice(part, 0, 1))
+            <> string.slice(part, 1, string.length(part) - 1)
+        }
+    }
+  })
+}
+
+/// Converts text to PascalCase.
+/// All words are capitalized and joined without separator.
+///
+///   to_pascal_case("hello world") -> "HelloWorld"
+///   to_pascal_case("get user by id") -> "GetUserById"
+///
+pub fn to_pascal_case(s: String) -> String {
+  let parts = string.split(slugify(s), "-")
+  list.fold(parts, "", fn(acc, part) {
+    case string.length(part) == 0 {
+      True -> acc
+      False ->
+        acc
+        <> string.uppercase(string.slice(part, 0, 1))
+        <> string.slice(part, 1, string.length(part) - 1)
+    }
+  })
+}
+
+/// Converts text to Title Case.
+/// Each word is capitalized with spaces between them.
+///
+///   to_title_case("hello world") -> "Hello World"
+///   to_title_case("get user by id") -> "Get User By Id"
+///   to_title_case("café brûlée") -> "Cafe Brulee"
+///
+pub fn to_title_case(s: String) -> String {
+  let parts = string.split(slugify(s), "-")
+  let capitalized =
+    list.map(parts, fn(part) {
+      case string.length(part) == 0 {
+        True -> part
+        False ->
+          string.uppercase(string.slice(part, 0, 1))
+          <> string.slice(part, 1, string.length(part) - 1)
+      }
+    })
+  string.join(capitalized, " ")
+}
+// Note: normalizer helpers (NFC/NFD/NFKC/NFKD) are intentionally not
+// exported by the `str` library to avoid introducing an OTP dependency.
+// If you need to use OTP normalization, define a small helper in your
+// application (see `EXAMPLES.md` and `examples/with_otp.gleam`).
