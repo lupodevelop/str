@@ -288,7 +288,7 @@ python3 scripts/generate_character_tables.py
 
 ## 📊 Test Coverage
 
-- **325 tests** covering all public functions
+- **tests** covering all public functions
 - Unicode edge cases (emoji, ZWJ, combining marks)
 - Grapheme cluster boundary handling
 - Cross-module integration tests
