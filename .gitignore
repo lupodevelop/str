@@ -1,4 +1,43 @@
+### Erlang / Gleam / build artifacts
+_build/
+deps/
+erl_crash.dump
 *.beam
 *.ez
-/build
-erl_crash.dump
+
+### Rebar / package locks
+rebar.lock
+
+### Editor directories and files
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+.cache/
+
+### Node / Python / misc
+node_modules/
+.venv/
+env/
+venv/
+
+### Logs, temp, coverage
+*.log
+coverage/
+dist/
+tmp/
+
+### Generated artifacts (archives, compiled packages)
+*.tar
+*.tar.gz
+*.tgz
+
+### OS files
+.DS_Store
+
+### Optional: docs
+### If you generate HTML docs locally and do not want to commit them,
+### uncomment the following line to ignore the generated docs directory.
+# docs/
