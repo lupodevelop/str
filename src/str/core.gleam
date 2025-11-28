@@ -1283,27 +1283,35 @@ fn min3(a: Int, b: Int, c: Int) -> Int {
 pub fn index_of(text: String, needle: String) -> Result(Int, Nil) {
   let text_chars = string.to_graphemes(text)
   let needle_chars = string.to_graphemes(needle)
+  let text_len = list.length(text_chars)
   let needle_len = list.length(needle_chars)
 
   case needle_len == 0 {
     True -> Error(Nil)
-    False -> index_of_loop(text_chars, needle_chars, needle_len, 0)
+    False -> index_of_loop(text_chars, needle_chars, text_len, needle_len, 0)
   }
 }
 
 fn index_of_loop(
   text: List(String),
   needle: List(String),
+  text_len: Int,
   needle_len: Int,
   index: Int,
 ) -> Result(Int, Nil) {
-  case list.length(text) < needle_len {
+  case text_len < needle_len {
     True -> Error(Nil)
     False ->
       case list.take(text, needle_len) == needle {
         True -> Ok(index)
         False ->
-          index_of_loop(list.drop(text, 1), needle, needle_len, index + 1)
+          index_of_loop(
+            list.drop(text, 1),
+            needle,
+            text_len - 1,
+            needle_len,
+            index + 1,
+          )
       }
   }
 }
@@ -1318,23 +1326,32 @@ fn index_of_loop(
 pub fn last_index_of(text: String, needle: String) -> Result(Int, Nil) {
   let text_chars = string.to_graphemes(text)
   let needle_chars = string.to_graphemes(needle)
+  let text_len = list.length(text_chars)
   let needle_len = list.length(needle_chars)
 
   case needle_len == 0 {
     True -> Error(Nil)
     False ->
-      last_index_of_loop(text_chars, needle_chars, needle_len, 0, Error(Nil))
+      last_index_of_loop(
+        text_chars,
+        needle_chars,
+        text_len,
+        needle_len,
+        0,
+        Error(Nil),
+      )
   }
 }
 
 fn last_index_of_loop(
   text: List(String),
   needle: List(String),
+  text_len: Int,
   needle_len: Int,
   index: Int,
   last_found: Result(Int, Nil),
 ) -> Result(Int, Nil) {
-  case list.length(text) < needle_len {
+  case text_len < needle_len {
     True -> last_found
     False -> {
       let new_found = case list.take(text, needle_len) == needle {
@@ -1344,6 +1361,7 @@ fn last_index_of_loop(
       last_index_of_loop(
         list.drop(text, 1),
         needle,
+        text_len - 1,
         needle_len,
         index + 1,
         new_found,
