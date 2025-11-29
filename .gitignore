@@ -4,6 +4,7 @@ deps/
 erl_crash.dump
 *.beam
 *.ez
+build/
 
 ### Rebar / package locks
 rebar.lock
