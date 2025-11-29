@@ -440,6 +440,11 @@ pub fn take(text: String, n: Int) -> String {
   }
 }
 
+/// Returns the number of grapheme clusters in `text`.
+pub fn length(text: String) -> Int {
+  string.to_graphemes(text) |> list.length
+}
+
 /// Drops the first N grapheme clusters from text.
 ///
 ///   drop("hello", 2) -> "llo"

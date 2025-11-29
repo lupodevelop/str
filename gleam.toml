@@ -1,5 +1,5 @@
 name = "str"
-version = "1.0.1"
+version = "1.1.0"
 
 # Project metadata (fill or replace placeholders before publishing)
 description = "Unicode-aware string utilities for Gleam: grapheme-safe operations, pragmatic ASCII transliteration, and slug generation."
