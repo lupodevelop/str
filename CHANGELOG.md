@@ -2,6 +2,22 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.1.1] - 2025-11-30
+### Fixed
+- Robustness fixes for grapheme-aware utilities; resolved parity issues in `ends_with/2` for complex ZWJ sequences.
+
+### Performance
+- Minor optimizations and safe fast-paths for ASCII suffix handling.
+
+### Documentation
+- Minor clarifications in the tokenizer documentation.
+
+### Tests
+- Updated tests covering emoji/ZWJ and tokenization edge cases.
+
+Contributed by: Daniele (`lupodevelop`)
+
+
 ## [1.1.0] - 2025-11-30
 ### Added
 - `length(text)` — grapheme-aware length function returning the number of grapheme clusters. Correctly counts emoji, combining sequences, flags, and other multi-codepoint graphemes.

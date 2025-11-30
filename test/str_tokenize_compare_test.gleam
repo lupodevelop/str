@@ -5,7 +5,13 @@ pub fn chars_vs_stdlib_length_test() {
   // Examples where we expect close agreement
   let expected_equal = ["hello", "café"]
 
-  let allowed_diff = ["e\u{0301}", "🇮🇹", "👩\u{200D}👩\u{200D}👧\u{200D}👦", "1️⃣", "👍🏿"]
+  let allowed_diff = [
+    "e\u{0301}",
+    "🇮🇹",
+    "👩\u{200D}👩\u{200D}👧\u{200D}👦",
+    "1️⃣",
+    "👍🏿",
+  ]
 
   let check_eq = fn(s) {
     let a = tokenize.chars(s)
