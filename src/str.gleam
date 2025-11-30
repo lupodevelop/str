@@ -97,6 +97,36 @@ pub fn last_index_of(text: String, needle: String) -> Result(Int, Nil) {
   core.last_index_of(text, needle)
 }
 
+/// Returns True if `needle` is found in `text` (grapheme-aware).
+pub fn contains(text: String, needle: String) -> Bool {
+  core.contains(text, needle)
+}
+
+/// Returns True if `text` starts with `prefix` on grapheme boundaries.
+pub fn starts_with(text: String, prefix: String) -> Bool {
+  core.starts_with(text, prefix)
+}
+
+/// Returns True if `text` ends with `suffix` on grapheme boundaries.
+pub fn ends_with(text: String, suffix: String) -> Bool {
+  core.ends_with(text, suffix)
+}
+
+/// Returns True if `text` is an empty string.
+pub fn is_empty(text: String) -> Bool {
+  core.is_empty(text)
+}
+
+/// Returns True if any of the `needles` appear in `text`.
+pub fn contains_any(text: String, needles: List(String)) -> Bool {
+  core.contains_any(text, needles)
+}
+
+/// Returns True if all of the `needles` appear in `text`.
+pub fn contains_all(text: String, needles: List(String)) -> Bool {
+  core.contains_all(text, needles)
+}
+
 /// Replaces only the first occurrence of old with new.
 pub fn replace_first(text: String, old: String, new: String) -> String {
   core.replace_first(text, old, new)

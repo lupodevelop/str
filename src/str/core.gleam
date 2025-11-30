@@ -1395,6 +1395,66 @@ pub fn contains_all(text: String, needles: List(String)) -> Bool {
   list.all(needles, fn(needle) { string.contains(text, needle) })
 }
 
+/// Returns True if `needle` is found in `text` (grapheme-aware).
+///
+///   contains("hello world", "world") -> True
+///   contains("hello", "x") -> False
+///   contains("", "") -> False
+pub fn contains(text: String, needle: String) -> Bool {
+  case index_of(text, needle) {
+    Ok(_) -> True
+    Error(_) -> False
+  }
+}
+
+/// Returns True if `text` starts with `prefix` on grapheme boundaries.
+///
+///   starts_with("hello", "he") -> True
+///   starts_with("hello", "") -> True
+///   starts_with("hi", "hello") -> False
+pub fn starts_with(text: String, prefix: String) -> Bool {
+  let t = string.to_graphemes(text)
+  let p = string.to_graphemes(prefix)
+  let p_len = list.length(p)
+  case p_len == 0 {
+    True -> True
+    False ->
+      case list.length(t) < p_len {
+        True -> False
+        False -> list.take(t, p_len) == p
+      }
+  }
+}
+
+/// Returns True if `text` ends with `suffix` on grapheme boundaries.
+///
+///   ends_with("hello.txt", ".txt") -> True
+///   ends_with("hello", "") -> True
+///   ends_with("hi", "hello") -> False
+pub fn ends_with(text: String, suffix: String) -> Bool {
+  let t = string.to_graphemes(text)
+  let s = string.to_graphemes(suffix)
+  let s_len = list.length(s)
+  let t_len = list.length(t)
+  case s_len == 0 {
+    True -> True
+    False ->
+      case s_len > t_len {
+        True -> False
+        False -> list.take(list.drop(t, t_len - s_len), s_len) == s
+      }
+  }
+}
+
+/// Returns True if `text` is an empty string.
+///
+///   is_empty("") -> True
+///   is_empty(" ") -> False
+pub fn is_empty(text: String) -> Bool {
+  text == ""
+}
+
+
 // ============================================================================
 // REPLACEMENT VARIANTS
 // ============================================================================
