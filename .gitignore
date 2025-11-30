@@ -39,6 +39,6 @@ tmp/
 .DS_Store
 
 ### Optional: docs
-### If you generate HTML docs locally and do not want to commit them,
-### uncomment the following line to ignore the generated docs directory.
-# docs/
+
+### user-specific files
+artifacts/
