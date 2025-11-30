@@ -236,7 +236,7 @@ extra.slugify_opts("Hello World", 0, "_", False)   // → "hello_world"
 
 ```
 str/
-├── core        # Grapheme-aware core utilities (67 functions)
+├── core        # Grapheme-aware core utilities
 ├── extra       # ASCII folding, slugs, case conversions
 ├── tokenize    # Pure-Gleam tokenizer (reference)
 └── internal_*  # Character tables (internal)
@@ -277,7 +277,7 @@ extra.slugify_with_normalizer("Café", otp_nfd)
 ## 🧪 Development
 
 ```sh
-# Run the test suite (325 tests)
+# Run the test suite
 gleam test
 
 # Regenerate character tables documentation
