@@ -30,6 +30,78 @@ pub fn search_examples() {
 }
 ```
 
+### Grapheme-Aware Length and String Checks (NEW in 1.1.0)
+
+```gleam
+import str/core
+
+pub fn length_examples() {
+  // Grapheme-aware length (NEW in 1.1.0)
+  // Unlike standard string length, counts grapheme clusters correctly
+  let len = core.length("Hello")
+  // 5
+  
+  // Family emoji is a SINGLE grapheme cluster
+  let emoji_len = core.length("👨‍👩‍👧‍👦")
+  // 1
+  
+  // Flag is also a single grapheme
+  let flag_len = core.length("🇮🇹")
+  // 1
+  
+  // Combining characters stay attached
+  let cafe_len = core.length("café")
+  // 4 (even with combining accent)
+}
+
+pub fn contains_examples() {
+  // Grapheme-aware contains (NEW in 1.1.0)
+  let found = core.contains("hello world", "world")
+  // True
+  
+  let not_found = core.contains("hello", "x")
+  // False
+  
+  // Works correctly with emoji
+  let emoji_found = core.contains("👨‍👩‍👧‍👦 family", "👨‍👩‍👧‍👦")
+  // True
+}
+
+pub fn prefix_suffix_examples() {
+  // Grapheme-aware starts_with (NEW in 1.1.0)
+  let starts = core.starts_with("hello", "he")
+  // True
+  
+  // Empty prefix always matches
+  let empty_prefix = core.starts_with("hello", "")
+  // True
+  
+  // Works with emoji on grapheme boundaries
+  let emoji_starts = core.starts_with("👨‍👩‍👧‍👦abc", "👨‍👩‍👧‍👦")
+  // True
+  
+  // Grapheme-aware ends_with (NEW in 1.1.0)
+  let ends = core.ends_with("hello.txt", ".txt")
+  // True
+  
+  let emoji_ends = core.ends_with("abc👨‍👩‍👧‍👦", "👨‍👩‍👧‍👦")
+  // True
+}
+
+pub fn empty_check_examples() {
+  // is_empty check (NEW in 1.1.0)
+  let empty = core.is_empty("")
+  // True
+  
+  let not_empty = core.is_empty(" ")
+  // False (whitespace is not empty)
+  
+  // Combine with is_blank for whitespace check
+  let blank = core.is_blank("   ")
+  // True
+}
+```
+
 ### Replace First/Last Occurrence
 
 ```gleam
