@@ -20,10 +20,8 @@ fn ascii_fold_full(s: String, decompose: Bool) -> String {
   // Apply replacement table first (handles precomposed characters)
   let replaced =
     list.fold(reps, s, fn(acc, pair) {
-      case pair {
-        [from, to] -> string.replace(acc, from, to)
-        _ -> acc
-      }
+      let #(from, to) = pair
+      string.replace(acc, from, to)
     })
 
   // Optionally decompose (expand precomposed letters) and then remove
@@ -37,10 +35,8 @@ fn ascii_fold_full(s: String, decompose: Bool) -> String {
           |> internal_decompose.decompose_latin
           |> internal_translit.remove_combining_marks,
         fn(acc, pair) {
-          case pair {
-            [from, to] -> string.replace(acc, from, to)
-            _ -> acc
-          }
+          let #(from, to) = pair
+          string.replace(acc, from, to)
         },
       )
     False -> replaced
@@ -81,10 +77,8 @@ pub fn ascii_fold_with_normalizer(s: String, normalizer) -> String {
 
   let replaced =
     list.fold(reps, s, fn(acc, pair) {
-      case pair {
-        [from, to] -> string.replace(acc, from, to)
-        _ -> acc
-      }
+      let #(from, to) = pair
+      string.replace(acc, from, to)
     })
 
   let decomposed = replaced |> internal_decompose.decompose_latin
@@ -94,10 +88,8 @@ pub fn ascii_fold_with_normalizer(s: String, normalizer) -> String {
     internal_translit.replacements(),
     normalized |> internal_translit.remove_combining_marks,
     fn(acc, pair) {
-      case pair {
-        [from, to] -> string.replace(acc, from, to)
-        _ -> acc
-      }
+      let #(from, to) = pair
+      string.replace(acc, from, to)
     },
   )
 }
@@ -108,10 +100,8 @@ pub fn ascii_fold_no_decompose_with_normalizer(s: String, normalizer) -> String 
 
   let replaced =
     list.fold(reps, s, fn(acc, pair) {
-      case pair {
-        [from, to] -> string.replace(acc, from, to)
-        _ -> acc
-      }
+      let #(from, to) = pair
+      string.replace(acc, from, to)
     })
 
   // In the no-decompose variant we still allow the caller to run a
@@ -119,10 +109,8 @@ pub fn ascii_fold_no_decompose_with_normalizer(s: String, normalizer) -> String 
   let normalized = normalizer(replaced)
 
   list.fold(reps, normalized, fn(acc, pair) {
-    case pair {
-      [from, to] -> string.replace(acc, from, to)
-      _ -> acc
-    }
+    let #(from, to) = pair
+    string.replace(acc, from, to)
   })
 }
 
