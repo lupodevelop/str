@@ -45,6 +45,11 @@ pub fn reverse(text: String) -> String {
   core.reverse(text)
 }
 
+/// Returns the number of grapheme clusters in `text`.
+pub fn length(text: String) -> Int {
+  core.length(text)
+}
+
 // ============================================================================
 // TRUNCATION
 // ============================================================================
