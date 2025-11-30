@@ -59,6 +59,19 @@ reverse("👨‍👩‍👧‍👦")  // "👨‍👩‍👧‍👦" (single clu
 
 ### Grapheme Extraction
 
+#### `length(text: String) -> Int`
+
+Returns the number of grapheme clusters in text. This is a grapheme-aware length function that correctly counts complex emoji, combining sequences, flags, and other multi-codepoint graphemes.
+
+**Example**:
+```gleam
+length("hello")       // 5
+length("👨‍👩‍👧‍👦")        // 1 (single family emoji cluster)
+length("café")        // 4 (with combining accent)
+length("🇮🇹")          // 1 (flag is a single grapheme)
+length("")            // 0
+```
+
 #### `take(text: String, n: Int) -> String`
 
 Returns the first N grapheme clusters from text.
@@ -456,6 +469,42 @@ last_index_of("hello hello", "hello")  // Ok(6)
 last_index_of("a-b-c", "-")            // Ok(3)
 ```
 
+#### `contains(text: String, needle: String) -> Bool`
+
+Returns `True` if `needle` is found in `text`. This is grapheme-aware and correctly handles complex Unicode sequences.
+
+**Example**:
+```gleam
+contains("hello world", "world")  // True
+contains("hello", "x")            // False
+contains("👨‍👩‍👧‍👦 family", "👨‍👩‍👧‍👦")    // True
+contains("", "")                  // False
+```
+
+#### `starts_with(text: String, prefix: String) -> Bool`
+
+Returns `True` if `text` starts with `prefix` on grapheme boundaries.
+
+**Example**:
+```gleam
+starts_with("hello", "he")         // True
+starts_with("hello", "")           // True
+starts_with("hi", "hello")         // False
+starts_with("👨‍👩‍👧‍👦abc", "👨‍👩‍👧‍👦")      // True
+```
+
+#### `ends_with(text: String, suffix: String) -> Bool`
+
+Returns `True` if `text` ends with `suffix` on grapheme boundaries.
+
+**Example**:
+```gleam
+ends_with("hello.txt", ".txt")     // True
+ends_with("hello", "")             // True
+ends_with("hi", "hello")           // False
+ends_with("abc👨‍👩‍👧‍👦", "👨‍👩‍👧‍👦")        // True
+```
+
 #### `contains_any(text: String, needles: List(String)) -> Bool`
 
 Checks if text contains any of the given needles.
@@ -534,6 +583,17 @@ is_title_case("Hello world")        // False
 is_title_case("Hello 123 World")    // True (numbers ignored)
 is_title_case("Hello 🎉 World")     // True (emoji ignored)
 is_title_case("")                   // False
+```
+
+#### `is_empty(text: String) -> Bool`
+
+Returns `True` if `text` is an empty string.
+
+**Example**:
+```gleam
+is_empty("")   // True
+is_empty(" ")  // False
+is_empty("a")  // False
 ```
 
 #### `is_ascii(text: String) -> Bool`
