@@ -1375,24 +1375,28 @@ fn last_index_of_loop(
   }
 }
 
-/// Checks if text contains any of the given needles.
+/// Checks if text contains any of the given needles (grapheme-aware).
+/// Uses grapheme-boundary matching for correct Unicode handling.
 ///
 ///   contains_any("hello world", ["foo", "world"]) -> True
 ///   contains_any("hello", ["x", "y", "z"]) -> False
 ///   contains_any("test", []) -> False
+///   contains_any("👨‍👩‍👧‍👦 family", ["👨‍👩‍👧‍👦", "test"]) -> True
 ///
 pub fn contains_any(text: String, needles: List(String)) -> Bool {
-  list.any(needles, fn(needle) { string.contains(text, needle) })
+  list.any(needles, fn(needle) { contains(text, needle) })
 }
 
-/// Checks if text contains all of the given needles.
+/// Checks if text contains all of the given needles (grapheme-aware).
+/// Uses grapheme-boundary matching for correct Unicode handling.
 ///
 ///   contains_all("hello world", ["hello", "world"]) -> True
 ///   contains_all("hello", ["hello", "x"]) -> False
 ///   contains_all("test", []) -> True
+///   contains_all("👨‍👩‍👧‍👦 family", ["👨‍👩‍👧‍👦", "family"]) -> True
 ///
 pub fn contains_all(text: String, needles: List(String)) -> Bool {
-  list.all(needles, fn(needle) { string.contains(text, needle) })
+  list.all(needles, fn(needle) { contains(text, needle) })
 }
 
 /// Returns True if `needle` is found in `text` (grapheme-aware).

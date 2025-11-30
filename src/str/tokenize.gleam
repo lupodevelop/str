@@ -1,8 +1,10 @@
 //// Pure-Gleam tokenizer for grapheme cluster segmentation.
 ////
 //// Handles base characters followed by combining marks, variation selectors,
-//// skin-tone modifiers and simple ZWJ sequences. This is a pedagogical
-//// reference implementation, not a full UAX #29 implementation.
+//// skin-tone modifiers and simple ZWJ sequences. This is an experimental
+//// pure-Gleam implementation that approximates grapheme segmentation.
+//// For production use the BEAM-provided `string.to_graphemes` via
+//// `chars_stdlib/1`, which follows the platform's grapheme segmentation.
 
 import gleam/list
 import gleam/string
@@ -84,8 +86,15 @@ fn rec_build(cps, clusters, current_rev, pending) -> List(String) {
 }
 
 /// Returns a list of grapheme clusters for the input string.
-/// Uses a pure-Gleam approximation of grapheme segmentation.
+/// This `chars/1` function is an experimental, pure-Gleam tokenizer that
+/// approximates grapheme cluster segmentation. It is useful when you need a
+/// tokenizer implemented purely in Gleam (e.g. for understanding or
+/// environments where you prefer not to depend on the BEAM helper), but it
+/// may differ in edge cases from the BEAM stdlib implementation. Prefer
+/// `chars_stdlib/1` for production code where accuracy and performance are
+/// important.
 ///
+/// Example:
 ///   chars("café") -> ["c", "a", "f", "é"]
 ///
 pub fn chars(text: String) -> List(String) {

@@ -13,6 +13,15 @@ import str/internal_translit
 /// Core ASCII folding implementation with optional decomposition.
 /// Applies replacement tables, optionally decomposes Latin chars and removes
 /// combining marks. Internal use only.
+///
+/// Pipeline when decompose=True:
+/// 1. Apply replacement table (handles precomposed chars like é → e, ß → ss)
+/// 2. Decompose remaining Latin chars (é → e + combining accent)
+/// 3. Remove combining marks (strips accents, leaving base chars)
+/// 4. Apply replacement table again (catch chars that didn't match in step 1
+///    due to attached combining marks, e.g., "Å\u{0323}" doesn't match "Å"
+///    but after removing the dot below, "Å" matches)
+///
 fn ascii_fold_full(s: String, decompose: Bool) -> String {
   // Use the centralized replacement table from the internal module.
   let reps = internal_translit.replacements()
@@ -20,29 +29,28 @@ fn ascii_fold_full(s: String, decompose: Bool) -> String {
   // Apply replacement table first (handles precomposed characters)
   let replaced =
     list.fold(reps, s, fn(acc, pair) {
-      case pair {
-        [from, to] -> string.replace(acc, from, to)
-        _ -> acc
-      }
+      let #(from, to) = pair
+      string.replace(acc, from, to)
     })
 
   // Optionally decompose (expand precomposed letters) and then remove
   // combining marks. Decomposition is limited to Latin ranges and is
   // performed in pure Gleam by `internal_decompose`.
   case decompose {
-    True ->
-      list.fold(
-        internal_translit.replacements(),
+    True -> {
+      let after_decompose =
         replaced
-          |> internal_decompose.decompose_latin
-          |> internal_translit.remove_combining_marks,
-        fn(acc, pair) {
-          case pair {
-            [from, to] -> string.replace(acc, from, to)
-            _ -> acc
-          }
-        },
-      )
+        |> internal_decompose.decompose_latin
+        |> internal_translit.remove_combining_marks
+
+      // Second pass: catch precomposed chars that didn't match initially
+      // because they had combining marks attached (string.replace matches
+      // exact codepoint sequences, so "Å\u{0323}" != "Å")
+      list.fold(reps, after_decompose, fn(acc, pair) {
+        let #(from, to) = pair
+        string.replace(acc, from, to)
+      })
+    }
     False -> replaced
   }
 }
@@ -71,58 +79,64 @@ pub fn ascii_fold_no_decompose(s: String) -> String {
 /// The normalizer (typically OTP's :unicode module) is applied between
 /// decomposition and combining mark removal.
 ///
+/// Pipeline:
+/// 1. Apply replacement table (precomposed chars)
+/// 2. Decompose Latin chars
+/// 3. Apply custom normalizer (e.g., NFC/NFD from OTP)
+/// 4. Remove combining marks
+/// 5. Apply replacement table again (catch chars with attached combining marks)
+///
 ///   ascii_fold_with_normalizer("café", my_nfd) -> "cafe"
 ///
 pub fn ascii_fold_with_normalizer(s: String, normalizer) -> String {
-  // Manually inline the same pipeline as `ascii_fold_full`, but call
-  // the `normalizer` function (provided by the caller) between
-  // decomposition and combining-mark removal.
   let reps = internal_translit.replacements()
 
   let replaced =
     list.fold(reps, s, fn(acc, pair) {
-      case pair {
-        [from, to] -> string.replace(acc, from, to)
-        _ -> acc
-      }
+      let #(from, to) = pair
+      string.replace(acc, from, to)
     })
 
-  let decomposed = replaced |> internal_decompose.decompose_latin
-  let normalized = normalizer(decomposed)
+  let after_normalize =
+    replaced
+    |> internal_decompose.decompose_latin
+    |> normalizer
+    |> internal_translit.remove_combining_marks
 
-  list.fold(
-    internal_translit.replacements(),
-    normalized |> internal_translit.remove_combining_marks,
-    fn(acc, pair) {
-      case pair {
-        [from, to] -> string.replace(acc, from, to)
-        _ -> acc
-      }
-    },
-  )
+  // Second pass for chars that didn't match due to attached combining marks
+  list.fold(reps, after_normalize, fn(acc, pair) {
+    let #(from, to) = pair
+    string.replace(acc, from, to)
+  })
 }
 
 /// ASCII folding without decomposition, with custom normalizer.
+/// The replacement table is applied twice: before and after normalization.
+/// This handles cases where the normalizer (e.g., NFC) may compose characters
+/// into precomposed forms that the table can then convert.
+///
+/// Pipeline:
+/// 1. Apply replacement table (precomposed chars)
+/// 2. Apply custom normalizer (may produce new precomposed chars)
+/// 3. Apply replacement table again (catch newly composed chars)
+///
 pub fn ascii_fold_no_decompose_with_normalizer(s: String, normalizer) -> String {
   let reps = internal_translit.replacements()
 
+  // First pass: handle precomposed characters in the input
   let replaced =
     list.fold(reps, s, fn(acc, pair) {
-      case pair {
-        [from, to] -> string.replace(acc, from, to)
-        _ -> acc
-      }
+      let #(from, to) = pair
+      string.replace(acc, from, to)
     })
 
-  // In the no-decompose variant we still allow the caller to run a
-  // normalizer if they wish; otherwise they can pass identity.
+  // Apply the user-provided normalizer (e.g., NFC, NFD)
   let normalized = normalizer(replaced)
 
+  // Second pass: handle any precomposed characters produced by normalizer
   list.fold(reps, normalized, fn(acc, pair) {
-    case pair {
-      [from, to] -> string.replace(acc, from, to)
-      _ -> acc
-    }
+    let #(from, to) = pair
+    string.replace(acc, from, to)
   })
 }
 
