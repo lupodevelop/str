@@ -110,9 +110,7 @@ pub fn to_snake_case_test() {
 
 pub fn to_camel_case_test() {
   let s = "Hello Fancy World"
-  let camel = extra.to_camel_case(s)
-  assert string.length(camel) > 0
-  assert string.slice(camel, 0, 1) != "-"
+  assert extra.to_camel_case(s) == "helloFancyWorld"
 }
 
 pub fn camel_case_edge_test() {
