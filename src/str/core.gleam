@@ -12,7 +12,6 @@
 import gleam/int
 import gleam/list
 import gleam/string
-import str/tokenize
 
 /// Detects if a grapheme cluster likely contains emoji components.
 ///
@@ -195,24 +194,51 @@ fn count_loop(
   overlapping: Bool,
   acc: Int,
 ) -> Int {
-  case list.length(hs) < nd_len {
+  count_loop_with_len(hs, list.length(hs), nd, nd_len, overlapping, acc)
+}
+
+fn count_loop_with_len(
+  hs: List(String),
+  hs_len: Int,
+  nd: List(String),
+  nd_len: Int,
+  overlapping: Bool,
+  acc: Int,
+) -> Int {
+  case hs_len < nd_len {
     True -> acc
     False ->
       case list.take(hs, nd_len) == nd {
         True ->
           case overlapping {
             True ->
-              count_loop(list.drop(hs, 1), nd, nd_len, overlapping, acc + 1)
+              count_loop_with_len(
+                list.drop(hs, 1),
+                hs_len - 1,
+                nd,
+                nd_len,
+                overlapping,
+                acc + 1,
+              )
             False ->
-              count_loop(
+              count_loop_with_len(
                 list.drop(hs, nd_len),
+                hs_len - nd_len,
                 nd,
                 nd_len,
                 overlapping,
                 acc + 1,
               )
           }
-        False -> count_loop(list.drop(hs, 1), nd, nd_len, overlapping, acc)
+        False ->
+          count_loop_with_len(
+            list.drop(hs, 1),
+            hs_len - 1,
+            nd,
+            nd_len,
+            overlapping,
+            acc,
+          )
       }
   }
 }
@@ -413,10 +439,10 @@ pub fn truncate_default(text: String, max_len: Int) -> String {
 ///   reverse("👨‍👩‍👧‍👦") -> "👨‍👩‍👧‍👦"
 ///
 pub fn reverse(text: String) -> String {
-  let clusters = tokenize.chars(text)
-  clusters
+  text
+  |> string.to_graphemes
   |> list.reverse
-  |> list.fold("", fn(acc, s) { acc <> s })
+  |> string.concat
 }
 
 // ============================================================================
