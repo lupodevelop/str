@@ -9,8 +9,6 @@ All notable changes to this project are documented in this file.
 ### Performance
 - Optimized `count/3` internals to avoid repeated `list.length` calls inside recursive loops, improving performance on long strings.
 
-### CI
-- Pinned Gleam version in CI and fixed build cache path/key for more reproducible and faster runs.
 
 Contributed by: Daniele (`lupodevelop`)
 
