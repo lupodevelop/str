@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+    # Pin a specific Gleam version to avoid surprises from :latest
+    container:
+      image: gleamlang/gleam:1.13.0
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Restore _build cache
+        uses: actions/cache@v4
+        with:
+          path: build
+          key: ${{ runner.os }}-gleam-build-${{ hashFiles('gleam.toml', 'manifest.toml') }}
+
+      - name: Restore Gleam user cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/gleam
+          key: ${{ runner.os }}-gleam-cache-${{ hashFiles('gleam.toml', 'manifest.toml') }}
+
+      - name: Install dependencies (download)
+        run: gleam deps download
+      - name: Show environment
+        run: |
+          echo "GITHUB_WORKSPACE=${GITHUB_WORKSPACE}"
+          uname -a
+
+      - name: Gleam version
+        run: gleam --version
+
+      - name: Format check
+        run: |
+          # Check formatting; fail the job if files need formatting
+          gleam format --check
+
+      - name: Run test suite
+        run: |
+          gleam test

@@ -12,7 +12,6 @@
 import gleam/int
 import gleam/list
 import gleam/string
-import str/tokenize
 
 /// Detects if a grapheme cluster likely contains emoji components.
 ///
@@ -440,10 +439,10 @@ pub fn truncate_default(text: String, max_len: Int) -> String {
 ///   reverse("👨‍👩‍👧‍👦") -> "👨‍👩‍👧‍👦"
 ///
 pub fn reverse(text: String) -> String {
-  let clusters = tokenize.chars(text)
-  clusters
+  text
+  |> string.to_graphemes
   |> list.reverse
-  |> list.fold("", fn(acc, s) { acc <> s })
+  |> string.concat
 }
 
 // ============================================================================
