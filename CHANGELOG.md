@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.2.0] - 2025-12-20
+### Changed
+- `reverse/1` now uses the BEAM stdlib grapheme segmentation (`string.to_graphemes`) for better Unicode correctness and consistency across the library.
+
+### Performance
+- Optimized `count/3` internals to avoid repeated `list.length` calls inside recursive loops, improving performance on long strings.
+
+### CI
+- Pinned Gleam version in CI and fixed build cache path/key for more reproducible and faster runs.
+
+Contributed by: Daniele (`lupodevelop`)
+
 ## [1.1.1] - 2025-11-30
 ### Fixed
 - Robustness fixes for grapheme-aware utilities; resolved parity issues in `ends_with/2` for complex ZWJ sequences.
