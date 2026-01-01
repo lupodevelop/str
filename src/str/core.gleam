@@ -926,7 +926,8 @@ pub fn common_prefix(strings: List(String)) -> String {
     [single] -> single
     [first, ..rest] -> {
       let first_chars = string.to_graphemes(first)
-      find_common_prefix(first_chars, rest, [])
+      let others_chars = list.map(rest, string.to_graphemes)
+      find_common_prefix(first_chars, others_chars, [])
       |> list.reverse
       |> string.concat
     }
@@ -935,15 +936,15 @@ pub fn common_prefix(strings: List(String)) -> String {
 
 fn find_common_prefix(
   reference: List(String),
-  others: List(String),
+  others: List(List(String)),
   acc: List(String),
 ) -> List(String) {
   case reference {
     [] -> acc
     [char, ..rest_ref] -> {
       let all_have_char =
-        list.all(others, fn(s) {
-          case string.to_graphemes(s) {
+        list.all(others, fn(graphemes) {
+          case graphemes {
             [] -> False
             [first, ..] -> first == char
           }
@@ -952,9 +953,7 @@ fn find_common_prefix(
         False -> acc
         True -> {
           let new_others =
-            list.map(others, fn(s) {
-              s |> string.to_graphemes |> list.drop(1) |> string.concat
-            })
+            list.map(others, fn(graphemes) { list.drop(graphemes, 1) })
           find_common_prefix(rest_ref, new_others, [char, ..acc])
         }
       }
@@ -968,14 +967,17 @@ fn find_common_prefix(
 ///   common_suffix(["hello", "world"]) -> ""
 ///
 pub fn common_suffix(strings: List(String)) -> String {
-  strings
-  |> list.map(fn(s) {
-    s |> string.to_graphemes |> list.reverse |> string.concat
-  })
-  |> common_prefix
-  |> string.to_graphemes
-  |> list.reverse
-  |> string.concat
+  case strings {
+    [] -> ""
+    [single] -> single
+    [first, ..rest] -> {
+      let first_chars = string.to_graphemes(first) |> list.reverse
+      let others_chars =
+        list.map(rest, fn(s) { string.to_graphemes(s) |> list.reverse })
+      find_common_prefix(first_chars, others_chars, [])
+      |> string.concat
+    }
+  }
 }
 
 // ============================================================================
