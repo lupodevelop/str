@@ -182,7 +182,15 @@ fn repeat_str(s: String, n: Int) -> String {
   }
 }
 
-// Internal helper returning the number of grapheme clusters in a string.
+/// Internal helper returning the number of grapheme clusters in a string.
+///
+/// Centralizes the common pattern `string.to_graphemes(s) |> list.length` to
+/// avoid duplication and improve readability across the module.
+///
+/// NOTE: This is an internal helper (not `pub`) and is intended for
+/// use inside `str`'s implementation. External users should use the public
+/// `length/1` function. The helper's implementation may change without a
+/// semver-major bump.
 fn grapheme_len(s: String) -> Int {
   string.to_graphemes(s) |> list.length
 }
