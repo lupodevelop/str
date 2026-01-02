@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.2.2] - 2026-01-02
+### Added
+- Added internal helper `grapheme_len/1` (internal) to centralize grapheme cluster length computation and avoid repetitive `string.to_graphemes |> list.length` patterns.
+
+### Style
+- Replaced direct grapheme-length patterns with `grapheme_len/1` where appropriate to improve readability and maintainability.
+
+Contributed by: Daniele (`lupodevelop`)
+
 ## [1.2.1] - 2026-01-02
 ### Fixed
 - Made `repeat_str/2` iterative to avoid deep recursion and improve performance on large repetition counts.
