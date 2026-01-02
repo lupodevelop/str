@@ -76,8 +76,7 @@ fn truncate_with_emoji_inclusion(
   // If there's an emoji cluster within the first `max_len` clusters of the
   // original text but it's not included in `initial`, extend the kept
   // clusters to include up to that emoji to avoid splitting it.
-  let window =
-    list.take(clusters, take + list.length(string.to_graphemes(suffix)))
+  let window = list.take(clusters, take + grapheme_len(suffix))
 
   let keep = case find_emoji_index(window, 0) {
     Ok(idx) ->
@@ -181,6 +180,11 @@ fn repeat_str(s: String, n: Int) -> String {
     True -> ""
     False -> list.fold(list.range(1, n), "", fn(acc, _) { acc <> s })
   }
+}
+
+// Internal helper returning the number of grapheme clusters in a string.
+fn grapheme_len(s: String) -> Int {
+  string.to_graphemes(s) |> list.length
 }
 
 /// Internal loop for counting substring occurrences.
@@ -468,7 +472,7 @@ pub fn take(text: String, n: Int) -> String {
 
 /// Returns the number of grapheme clusters in `text`.
 pub fn length(text: String) -> Int {
-  string.to_graphemes(text) |> list.length
+  grapheme_len(text)
 }
 
 /// Drops the first N grapheme clusters from text.
@@ -693,7 +697,7 @@ fn wrap_words(
   case remaining {
     [] -> acc
     [word, ..rest] -> {
-      let word_len = string.to_graphemes(word) |> list.length
+      let word_len = grapheme_len(word)
       case line_len == 0 {
         True ->
           // First word on line
@@ -874,7 +878,7 @@ pub fn rpartition(text: String, sep: String) -> #(String, String, String) {
   case last_index_of(text, sep) {
     Error(_) -> #("", "", text)
     Ok(idx) -> {
-      let sep_len = list.length(string.to_graphemes(sep))
+      let sep_len = grapheme_len(sep)
       let before = take(text, idx)
       let after = drop(text, idx + sep_len)
       #(before, sep, after)
@@ -1513,7 +1517,7 @@ pub fn replace_last(text: String, old: String, new: String) -> String {
   case last_index_of(text, old) {
     Error(_) -> text
     Ok(idx) -> {
-      let old_len = list.length(string.to_graphemes(old))
+      let old_len = grapheme_len(old)
       take(text, idx) <> new <> drop(text, idx + old_len)
     }
   }
@@ -1744,8 +1748,8 @@ pub fn escape_regex(text: String) -> String {
 ///   similarity("", "") -> 1.0
 ///
 pub fn similarity(a: String, b: String) -> Float {
-  let a_len = list.length(string.to_graphemes(a))
-  let b_len = list.length(string.to_graphemes(b))
+  let a_len = grapheme_len(a)
+  let b_len = grapheme_len(b)
   let max_len = case a_len > b_len {
     True -> a_len
     False -> b_len
