@@ -388,6 +388,13 @@ pub fn wrap_at_zero_width_test() {
   assert core.wrap_at("hello", 0) == "hello"
 }
 
+pub fn wrap_at_emoji_grapheme_test() {
+  // Ensure grapheme-aware wrapping treats emoji as single units
+  let s = "a 👨‍👩‍👧‍👦 b"
+  // Width 2 should force a newline between "a" and the emoji
+  assert string.contains(core.wrap_at(s, 2), "\n")
+}
+
 pub fn ellipsis_basic_test() {
   let result = core.ellipsis("Hello World", 8)
   assert string.ends_with(result, "…")
