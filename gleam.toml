@@ -1,9 +1,9 @@
 name = "str"
-version = "1.2.1"
+version = "1.2.2"
 
 # Project metadata (fill or replace placeholders before publishing)
 description = "Unicode-aware string utilities for Gleam: grapheme-safe operations, pragmatic ASCII transliteration, and slug generation."
-licences = ["MIT"]
+licenses = ["MIT"]
 repository = { type = "github", user = "lupodevelop", repo = "str" }
 links = [{ title = "Repository", href = "https://github.com/lupodevelop/str" }]
 
