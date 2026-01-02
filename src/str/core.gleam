@@ -1081,8 +1081,8 @@ pub fn is_alphanumeric(text: String) -> Bool {
 ///   remove_prefix("hello", "bye") -> "hello"
 ///
 pub fn remove_prefix(text: String, prefix: String) -> String {
-  case string.starts_with(text, prefix) {
-    True -> string.drop_start(text, string.length(prefix))
+  case starts_with(text, prefix) {
+    True -> drop(text, grapheme_len(prefix))
     False -> text
   }
 }
@@ -1093,8 +1093,8 @@ pub fn remove_prefix(text: String, prefix: String) -> String {
 ///   remove_suffix("hello", "bye") -> "hello"
 ///
 pub fn remove_suffix(text: String, suffix: String) -> String {
-  case string.ends_with(text, suffix) {
-    True -> string.drop_end(text, string.length(suffix))
+  case ends_with(text, suffix) {
+    True -> drop_right(text, grapheme_len(suffix))
     False -> text
   }
 }
@@ -1105,7 +1105,7 @@ pub fn remove_suffix(text: String, suffix: String) -> String {
 ///   ensure_prefix("hello world", "hello ") -> "hello world"
 ///
 pub fn ensure_prefix(text: String, prefix: String) -> String {
-  case string.starts_with(text, prefix) {
+  case starts_with(text, prefix) {
     True -> text
     False -> prefix <> text
   }
@@ -1117,7 +1117,7 @@ pub fn ensure_prefix(text: String, prefix: String) -> String {
 ///   ensure_suffix("hello world", " world") -> "hello world"
 ///
 pub fn ensure_suffix(text: String, suffix: String) -> String {
-  case string.ends_with(text, suffix) {
+  case ends_with(text, suffix) {
     True -> text
     False -> text <> suffix
   }
