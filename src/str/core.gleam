@@ -179,7 +179,7 @@ pub fn is_blank(text: String) -> Bool {
 fn repeat_str(s: String, n: Int) -> String {
   case n <= 0 {
     True -> ""
-    False -> s <> repeat_str(s, n - 1)
+    False -> list.fold(list.range(1, n), "", fn(acc, _) { acc <> s })
   }
 }
 
@@ -693,7 +693,7 @@ fn wrap_words(
   case remaining {
     [] -> acc
     [word, ..rest] -> {
-      let word_len = string.length(word)
+      let word_len = string.to_graphemes(word) |> list.length
       case line_len == 0 {
         True ->
           // First word on line

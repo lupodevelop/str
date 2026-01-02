@@ -341,7 +341,7 @@ pub fn to_snake_case(s: String) -> String {
 pub fn to_camel_case(s: String) -> String {
   let parts = string.split(slugify(s), "-")
   list.fold(parts, "", fn(acc, part) {
-    case string.length(part) == 0 {
+    case string.is_empty(part) {
       True -> acc
       False ->
         case acc == "" {
@@ -364,7 +364,7 @@ pub fn to_camel_case(s: String) -> String {
 pub fn to_pascal_case(s: String) -> String {
   let parts = string.split(slugify(s), "-")
   list.fold(parts, "", fn(acc, part) {
-    case string.length(part) == 0 {
+    case string.is_empty(part) {
       True -> acc
       False ->
         acc
@@ -385,7 +385,7 @@ pub fn to_title_case(s: String) -> String {
   let parts = string.split(slugify(s), "-")
   let capitalized =
     list.map(parts, fn(part) {
-      case string.length(part) == 0 {
+      case string.is_empty(part) {
         True -> part
         False ->
           string.uppercase(string.slice(part, 0, 1))

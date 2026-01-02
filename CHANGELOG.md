@@ -12,6 +12,20 @@ All notable changes to this project are documented in this file.
 
 Contributed by: Daniele (`lupodevelop`)
 
+## [1.2.1] - 2026-01-02
+### Fixed
+- Made `repeat_str/2` iterative to avoid deep recursion and improve performance on large repetition counts.
+- Fixed `wrap_at/2` to measure word lengths using grapheme clusters to avoid splitting emoji and other multi-codepoint graphemes.
+- Replaced several `string.length(part) == 0` checks with `string.is_empty(part)` for clarity.
+
+### Tests
+- Added `wrap_at_emoji_grapheme_test` to verify grapheme-aware wrapping behavior.
+
+### Style
+- Ran `gleam format` to normalize formatting.
+
+Contributed by: Daniele (`lupodevelop`)
+
 ## [1.1.1] - 2025-11-30
 ### Fixed
 - Robustness fixes for grapheme-aware utilities; resolved parity issues in `ends_with/2` for complex ZWJ sequences.
