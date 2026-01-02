@@ -9,6 +9,9 @@ All notable changes to this project are documented in this file.
 ### Style
 - Replaced direct grapheme-length patterns with `grapheme_len/1` where appropriate to improve readability and maintainability.
 
+### Tests
+- Added tests verifying grapheme-aware length behavior (ASCII, combining marks, ZWJ emoji sequences, regional flags, and long ASCII strings).
+
 Contributed by: Daniele (`lupodevelop`)
 
 ## [1.2.1] - 2026-01-02
