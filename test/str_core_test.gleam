@@ -559,6 +559,24 @@ pub fn ensure_prefix_present_test() {
   assert core.ensure_prefix("hello world", "hello ") == "hello world"
 }
 
+pub fn remove_prefix_emoji_test() {
+  assert core.remove_prefix("👨‍👩‍👧‍👦 family", "👨‍👩‍👧‍👦") == " family"
+}
+
+pub fn remove_suffix_emoji_test() {
+  assert core.remove_suffix("family 👨‍👩‍👧‍👦", "👨‍👩‍👧‍👦") == "family "
+}
+
+pub fn ensure_prefix_emoji_test() {
+  assert core.ensure_prefix("family", "👨‍👩‍👧‍👦 ") == "👨‍👩‍👧‍👦 family"
+  assert core.ensure_prefix("👨‍👩‍👧‍👦 family", "👨‍👩‍👧‍👦 ") == "👨‍👩‍👧‍👦 family"
+}
+
+pub fn ensure_suffix_emoji_test() {
+  assert core.ensure_suffix("family", " 👨‍👩‍👧‍👦") == "family 👨‍👩‍👧‍👦"
+  assert core.ensure_suffix("family 👨‍👩‍👧‍👦", " 👨‍👩‍👧‍👦") == "family 👨‍👩‍👧‍👦"
+}
+
 pub fn ensure_suffix_absent_test() {
   assert core.ensure_suffix("hello", " world") == "hello world"
 }
