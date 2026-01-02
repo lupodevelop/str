@@ -12,6 +12,9 @@ All notable changes to this project are documented in this file.
 ### Tests
 - Added tests verifying grapheme-aware length behavior (ASCII, combining marks, ZWJ emoji sequences, regional flags, and long ASCII strings).
 
+### Fixed
+- Made `remove_prefix`, `remove_suffix`, `ensure_prefix` and `ensure_suffix` grapheme-aware to avoid splitting multi-codepoint graphemes (emoji, combining sequences); added tests to cover these cases.
+
 Contributed by: Daniele (`lupodevelop`)
 
 ## [1.2.1] - 2026-01-02
