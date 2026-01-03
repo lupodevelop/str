@@ -1836,3 +1836,220 @@ pub fn fill(
     Both -> center(text, width, pad)
   }
 }
+
+// ============================================================================
+// KMP SEARCH HELPERS (non-integrated)
+// ---------------------------------------------------------------------------
+// TODO: Integrate KMP into the critical functions `index_of`, `last_index_of`,
+// and `count` using a hybrid heuristic:
+// - Fast-path sliding-match for short patterns / common cases
+// - KMP for long patterns or pathological cases (benchmark-driven)
+// Implement benchmarks and regression tests first; perform the integration
+// in a separate PR and add feature flags/rollback and sanity checks for safety.
+// ============================================================================
+
+/// Build KMP prefix table (also known as failure function) for a pattern
+/// given as a list of grapheme clusters.
+fn build_prefix_table_list(p: List(String)) -> List(Int) {
+  let m = list.length(p)
+  case m == 0 {
+    True -> []
+    False -> build_prefix_table_loop(p, 1, [0])
+  }
+}
+
+fn build_prefix_table_loop(p: List(String), q: Int, acc: List(Int)) -> List(Int) {
+  let m = list.length(p)
+  case q >= m {
+    True -> acc
+    False -> {
+      // current pattern element
+      let pq = case list.drop(p, q) {
+        [v, ..] -> v
+        [] -> ""
+      }
+
+      // current k is last entry in acc
+      let k = case list.last(acc) {
+        Ok(v) -> v
+        Error(_) -> 0
+      }
+
+      // Use module-level fallback to avoid nested function definition
+      let k_new = case k == 0 {
+        True -> {
+          let p0 = case list.drop(p, 0) {
+            [v, ..] -> v
+            [] -> ""
+          }
+          case pq == p0 {
+            True -> 1
+            False -> 0
+          }
+        }
+        False -> {
+          let cand = case list.drop(p, k) {
+            [v, ..] -> v
+            [] -> ""
+          }
+          case cand == pq {
+            True -> k + 1
+            False -> build_prefix_fallback(p, acc, k, pq)
+          }
+        }
+      }
+
+      build_prefix_table_loop(
+        p,
+        q + 1,
+        list.reverse([k_new, ..list.reverse(acc)]),
+      )
+    }
+  }
+}
+
+fn build_prefix_fallback(
+  p: List(String),
+  acc: List(Int),
+  k_inner: Int,
+  pq: String,
+) -> Int {
+  case k_inner == 0 {
+    True -> {
+      let p0 = case list.drop(p, 0) {
+        [v, ..] -> v
+        [] -> ""
+      }
+      case p0 == pq {
+        True -> 1
+        False -> 0
+      }
+    }
+    False -> {
+      let pk = case list.drop(p, k_inner) {
+        [v, ..] -> v
+        [] -> ""
+      }
+      case pk == pq {
+        True -> k_inner + 1
+        False -> {
+          let prev = case list.drop(acc, k_inner - 1) {
+            [v, ..] -> v
+            [] -> 0
+          }
+          build_prefix_fallback(p, acc, prev, pq)
+        }
+      }
+    }
+  }
+}
+
+/// KMP search over lists: returns list of start indices (0-based) of matches
+/// in the text (both provided as grapheme lists). Returns [] if pattern is
+/// empty or not found.
+fn kmp_search_all_list(text: List(String), pattern: List(String)) -> List(Int) {
+  let m = list.length(pattern)
+
+  case m == 0 {
+    True -> []
+    False -> {
+      let pi = build_prefix_table_list(pattern)
+      kmp_loop(text, pattern, pi, 0, 0, [])
+    }
+  }
+}
+
+fn kmp_loop(
+  text: List(String),
+  pattern: List(String),
+  pi: List(Int),
+  i: Int,
+  j: Int,
+  acc: List(Int),
+) -> List(Int) {
+  case list.drop(text, i) {
+    [] -> list.reverse(acc)
+    [ti, ..] -> {
+      let j1 = case j == 0 {
+        True -> {
+          let p0 = case list.drop(pattern, 0) {
+            [v, ..] -> v
+            [] -> ""
+          }
+          case p0 == ti {
+            True -> 1
+            False -> 0
+          }
+        }
+        False -> {
+          let pj = case list.drop(pattern, j) {
+            [v, ..] -> v
+            [] -> ""
+          }
+          case pj == ti {
+            True -> j + 1
+            False -> kmp_fallback_j(pattern, pi, ti, j)
+          }
+        }
+      }
+
+      case j1 == list.length(pattern) {
+        True -> {
+          let m = list.length(pattern)
+          let start = i - m + 1
+          let jnext = case list.drop(pi, m - 1) {
+            [v, ..] -> v
+            [] -> 0
+          }
+          kmp_loop(text, pattern, pi, i + 1, jnext, [start, ..acc])
+        }
+        False -> kmp_loop(text, pattern, pi, i + 1, j1, acc)
+      }
+    }
+  }
+}
+
+fn kmp_fallback_j(
+  pattern: List(String),
+  pi: List(Int),
+  ti: String,
+  j_in: Int,
+) -> Int {
+  case j_in == 0 {
+    True -> {
+      let p0 = case list.drop(pattern, 0) {
+        [v, ..] -> v
+        [] -> ""
+      }
+      case p0 == ti {
+        True -> 1
+        False -> 0
+      }
+    }
+    False -> {
+      let pj = case list.drop(pattern, j_in) {
+        [v, ..] -> v
+        [] -> ""
+      }
+      case pj == ti {
+        True -> j_in + 1
+        False -> {
+          let prev = case list.drop(pi, j_in - 1) {
+            [v, ..] -> v
+            [] -> 0
+          }
+          kmp_fallback_j(pattern, pi, ti, prev)
+        }
+      }
+    }
+  }
+}
+
+/// Public wrappers accepting `String` inputs for easier testing.
+pub fn build_prefix_table(pattern: String) -> List(Int) {
+  build_prefix_table_list(string.to_graphemes(pattern))
+}
+
+pub fn kmp_search_all(text: String, pattern: String) -> List(Int) {
+  kmp_search_all_list(string.to_graphemes(text), string.to_graphemes(pattern))
+}
