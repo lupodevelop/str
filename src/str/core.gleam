@@ -2131,3 +2131,65 @@ pub fn sliding_search_all(text: String, pattern: String) -> List(Int) {
     string.to_graphemes(pattern),
   )
 }
+
+// ============================================================================
+// SEARCH STRATEGY (heuristic helper — non-integrated)
+// ---------------------------------------------------------------------------
+// TODO: This helper chooses between Sliding and KMP based on empirical
+// thresholds. It is intentionally non-integrated: we will add a wrapper for
+// `index_of` / `count` in a follow-up PR after benchmarking and testing.
+// ============================================================================
+
+pub type SearchStrategy {
+  Sliding
+  Kmp
+}
+
+fn max_int_list(xs: List(Int)) -> Int {
+  case xs {
+    [] -> 0
+    [first, ..rest] ->
+      list.fold(rest, first, fn(acc, v) {
+        case v > acc {
+          True -> v
+          False -> acc
+        }
+      })
+  }
+}
+
+fn choose_search_strategy_list(
+  text: List(String),
+  pattern: List(String),
+) -> SearchStrategy {
+  let n = list.length(text)
+  let m = list.length(pattern)
+  case m == 0 {
+    True -> Sliding
+    False -> {
+      // Build prefix table to detect repetitiveness (max border)
+      let pi = build_prefix_table_list(pattern)
+      let max_border = max_int_list(pi)
+
+      case m >= 64 {
+        True -> Kmp
+        False ->
+          case n >= 100_000 && m >= 16 {
+            True -> Kmp
+            False ->
+              case max_border * 2 >= m {
+                True -> Kmp
+                False -> Sliding
+              }
+          }
+      }
+    }
+  }
+}
+
+pub fn choose_search_strategy(text: String, pattern: String) -> SearchStrategy {
+  choose_search_strategy_list(
+    string.to_graphemes(text),
+    string.to_graphemes(pattern),
+  )
+}
