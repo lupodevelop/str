@@ -2053,3 +2053,81 @@ pub fn build_prefix_table(pattern: String) -> List(Int) {
 pub fn kmp_search_all(text: String, pattern: String) -> List(Int) {
   kmp_search_all_list(string.to_graphemes(text), string.to_graphemes(pattern))
 }
+
+// ============================================================================
+// SLIDING-MATCH HELPERS (non-integrated, non-allocating)
+// ---------------------------------------------------------------------------
+// TODO: Integrate sliding-match fast-path into `index_of`, `last_index_of`,
+// and `count` to reduce allocations for common (short-pattern) cases.
+// Implement these helpers first (non-integrating), add micro-benchmarks and
+// regression tests, then apply the integration in a separate PR with
+// configurable thresholds and a feature flag for safety/rollback.
+// ============================================================================
+
+fn prefix_eq_list(text: List(String), pattern: List(String)) -> Bool {
+  case pattern {
+    [] -> True
+    [p_first, ..p_rest] ->
+      case text {
+        [t_first, ..t_rest] ->
+          case t_first == p_first {
+            True -> prefix_eq_list(t_rest, p_rest)
+            False -> False
+          }
+        [] -> False
+      }
+  }
+}
+
+fn sliding_search_loop(
+  text: List(String),
+  remaining_len: Int,
+  pat_len: Int,
+  pattern: List(String),
+  index: Int,
+  acc: List(Int),
+) -> List(Int) {
+  case remaining_len < pat_len {
+    True -> list.reverse(acc)
+    False ->
+      case prefix_eq_list(text, pattern) {
+        True ->
+          sliding_search_loop(
+            list.drop(text, 1),
+            remaining_len - 1,
+            pat_len,
+            pattern,
+            index + 1,
+            [index, ..acc],
+          )
+        False ->
+          sliding_search_loop(
+            list.drop(text, 1),
+            remaining_len - 1,
+            pat_len,
+            pattern,
+            index + 1,
+            acc,
+          )
+      }
+  }
+}
+
+fn sliding_search_all_list(
+  text: List(String),
+  pattern: List(String),
+) -> List(Int) {
+  let n = list.length(text)
+  let m = list.length(pattern)
+  case m == 0 {
+    True -> []
+    False -> sliding_search_loop(text, n, m, pattern, 0, [])
+  }
+}
+
+pub fn sliding_search_all(text: String, pattern: String) -> List(Int) {
+  sliding_search_all_list(
+    string.to_graphemes(text),
+    string.to_graphemes(pattern),
+  )
+}
