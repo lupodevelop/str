@@ -1,5 +1,5 @@
 import gleam/list
-import str/core as core
+import str/core
 
 pub fn choose_strategy_small_random_test() {
   let text = "abcdefghij"
@@ -14,7 +14,7 @@ pub fn choose_strategy_large_pat_test() {
 }
 
 pub fn choose_strategy_long_text_small_pat_test() {
-  let text = repeat("a", 200000)
+  let text = repeat("a", 200_000)
   let pat = "abcdabcd"
   assert core.choose_search_strategy(text, pat) == core.Kmp
 }
