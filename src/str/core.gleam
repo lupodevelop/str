@@ -808,6 +808,10 @@ fn squeeze_loop(
 }
 
 /// Removes trailing newline if present.
+/// Handles LF, CR, and CRLF sequences. Note: CR+LF pairs are treated as a
+/// single grapheme cluster by standard grapheme segmentation (UAX #29), so this
+/// function correctly removes a trailing CRLF whether the runtime represents
+/// it as a combined grapheme or as separate `\r`/`\n` graphemes.
 ///
 ///   chomp("hello\n") -> "hello"
 ///   chomp("hello\r\n") -> "hello"
