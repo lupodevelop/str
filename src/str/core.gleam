@@ -12,6 +12,8 @@
 import gleam/int
 import gleam/list
 import gleam/string
+import gleam/dict
+import str/config
 
 /// Detects if a grapheme cluster likely contains emoji components.
 ///
@@ -1984,27 +1986,44 @@ fn kmp_search_all_list(text: List(String), pattern: List(String)) -> List(Int) {
     True -> []
     False -> {
       let pi = build_prefix_table_list(pattern)
-      kmp_loop(text, pattern, pi, 0, 0, [])
+      // Build index->value maps for pattern and pi to allow O(1) lookups
+      let pattern_pairs = list_to_indexed_pairs(pattern)
+      let pi_pairs = list_to_indexed_pairs(pi)
+      let pmap = dict.from_list(pattern_pairs)
+      let pimap = dict.from_list(pi_pairs)
+      // Pass the remaining text list directly to avoid repeated list.drop
+      kmp_loop(pmap, pimap, text, 0, 0, [])
     }
   }
 }
 
+fn list_to_indexed_pairs(xs: List(a)) -> List(#(Int, a)) {
+  list_to_indexed_pairs_loop(xs, 0, [])
+}
+
+fn list_to_indexed_pairs_loop(xs: List(a), idx: Int, acc: List(#(Int, a))) -> List(#(Int, a)) {
+  case xs {
+    [] -> list.reverse(acc)
+    [first, ..rest] -> list_to_indexed_pairs_loop(rest, idx + 1, [#(idx, first), ..acc])
+  }
+}
+
 fn kmp_loop(
-  text: List(String),
-  pattern: List(String),
-  pi: List(Int),
+  pmap: dict.Dict(Int, String),
+  pimap: dict.Dict(Int, Int),
+  remaining_text: List(String),
   i: Int,
   j: Int,
   acc: List(Int),
 ) -> List(Int) {
-  case list.drop(text, i) {
+  case remaining_text {
     [] -> list.reverse(acc)
-    [ti, ..] -> {
+    [ti, ..rest_text] -> {
       let j1 = case j == 0 {
         True -> {
-          let p0 = case list.drop(pattern, 0) {
-            [v, ..] -> v
-            [] -> ""
+          let p0 = case dict.get(pmap, 0) {
+            Ok(v) -> v
+            Error(_) -> ""
           }
           case p0 == ti {
             True -> 1
@@ -2012,44 +2031,44 @@ fn kmp_loop(
           }
         }
         False -> {
-          let pj = case list.drop(pattern, j) {
-            [v, ..] -> v
-            [] -> ""
+          let pj = case dict.get(pmap, j) {
+            Ok(v) -> v
+            Error(_) -> ""
           }
           case pj == ti {
             True -> j + 1
-            False -> kmp_fallback_j(pattern, pi, ti, j)
+            False -> kmp_fallback_j(pmap, pimap, ti, j)
           }
         }
       }
 
-      case j1 == list.length(pattern) {
+      case j1 == dict.size(pmap) {
         True -> {
-          let m = list.length(pattern)
+          let m = dict.size(pmap)
           let start = i - m + 1
-          let jnext = case list.drop(pi, m - 1) {
-            [v, ..] -> v
-            [] -> 0
+          let jnext = case dict.get(pimap, m - 1) {
+            Ok(v) -> v
+            Error(_) -> 0
           }
-          kmp_loop(text, pattern, pi, i + 1, jnext, [start, ..acc])
+          kmp_loop(pmap, pimap, rest_text, i + 1, jnext, [start, ..acc])
         }
-        False -> kmp_loop(text, pattern, pi, i + 1, j1, acc)
+        False -> kmp_loop(pmap, pimap, rest_text, i + 1, j1, acc)
       }
     }
   }
 }
 
 fn kmp_fallback_j(
-  pattern: List(String),
-  pi: List(Int),
+  pmap: dict.Dict(Int, String),
+  pimap: dict.Dict(Int, Int),
   ti: String,
   j_in: Int,
 ) -> Int {
   case j_in == 0 {
     True -> {
-      let p0 = case list.drop(pattern, 0) {
-        [v, ..] -> v
-        [] -> ""
+      let p0 = case dict.get(pmap, 0) {
+        Ok(v) -> v
+        Error(_) -> ""
       }
       case p0 == ti {
         True -> 1
@@ -2057,18 +2076,18 @@ fn kmp_fallback_j(
       }
     }
     False -> {
-      let pj = case list.drop(pattern, j_in) {
-        [v, ..] -> v
-        [] -> ""
+      let pj = case dict.get(pmap, j_in) {
+        Ok(v) -> v
+        Error(_) -> ""
       }
       case pj == ti {
         True -> j_in + 1
         False -> {
-          let prev = case list.drop(pi, j_in - 1) {
-            [v, ..] -> v
-            [] -> 0
+          let prev = case dict.get(pimap, j_in - 1) {
+            Ok(v) -> v
+            Error(_) -> 0
           }
-          kmp_fallback_j(pattern, pi, ti, prev)
+          kmp_fallback_j(pmap, pimap, ti, prev)
         }
       }
     }
@@ -2201,26 +2220,30 @@ fn kmp_index_of_list(text: List(String), pattern: List(String)) -> Result(Int, N
     True -> Error(Nil)
     False -> {
       let pi = build_prefix_table_list(pattern)
-      kmp_index_loop(text, pattern, pi, 0, 0)
+      let pattern_pairs = list_to_indexed_pairs(pattern)
+      let pi_pairs = list_to_indexed_pairs(pi)
+      let pmap = dict.from_list(pattern_pairs)
+      let pimap = dict.from_list(pi_pairs)
+      kmp_index_loop(pmap, pimap, text, 0, 0)
     }
   }
 }
 
 fn kmp_index_loop(
-  text: List(String),
-  pattern: List(String),
-  pi: List(Int),
+  pmap: dict.Dict(Int, String),
+  pimap: dict.Dict(Int, Int),
+  remaining_text: List(String),
   i: Int,
   j: Int,
 ) -> Result(Int, Nil) {
-  case list.drop(text, i) {
+  case remaining_text {
     [] -> Error(Nil)
-    [ti, ..] -> {
+    [ti, ..rest_text] -> {
       let j1 = case j == 0 {
         True -> {
-          let p0 = case list.drop(pattern, 0) {
-            [v, ..] -> v
-            [] -> ""
+          let p0 = case dict.get(pmap, 0) {
+            Ok(v) -> v
+            Error(_) -> ""
           }
           case p0 == ti {
             True -> 1
@@ -2228,24 +2251,24 @@ fn kmp_index_loop(
           }
         }
         False -> {
-          let pj = case list.drop(pattern, j) {
-            [v, ..] -> v
-            [] -> ""
+          let pj = case dict.get(pmap, j) {
+            Ok(v) -> v
+            Error(_) -> ""
           }
           case pj == ti {
             True -> j + 1
-            False -> kmp_fallback_j(pattern, pi, ti, j)
+            False -> kmp_fallback_j(pmap, pimap, ti, j)
           }
         }
       }
 
-      case j1 == list.length(pattern) {
+      case j1 == dict.size(pmap) {
         True -> {
-          let m = list.length(pattern)
+          let m = dict.size(pmap)
           let start = i - m + 1
           Ok(start)
         }
-        False -> kmp_index_loop(text, pattern, pi, i + 1, j1)
+        False -> kmp_index_loop(pmap, pimap, rest_text, i + 1, j1)
       }
     }
   }
@@ -2294,13 +2317,19 @@ fn choose_search_strategy_list(
       let pi = build_prefix_table_list(pattern)
       let max_border = max_int_list(pi)
 
-      case m >= 64 {
+      // Tunable thresholds from config
+      let min_m = config.kmp_min_pattern_len()
+      let large_n = config.kmp_large_text_threshold()
+      let large_m = config.kmp_large_text_min_pat()
+      let border_mul = config.kmp_border_multiplier()
+
+      case m >= min_m {
         True -> Kmp
         False ->
-          case n >= 100_000 && m >= 16 {
+          case n >= large_n && m >= large_m {
             True -> Kmp
             False ->
-              case max_border * 2 >= m {
+              case max_border * border_mul >= m {
                 True -> Kmp
                 False -> Sliding
               }

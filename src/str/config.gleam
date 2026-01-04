@@ -13,3 +13,23 @@
 pub fn smart_search_enabled() -> Bool {
   False
 }
+
+/// Minimum pattern length (in grapheme clusters) at which KMP is preferred
+pub fn kmp_min_pattern_len() -> Int {
+  24
+}
+
+/// Threshold for "large" text lengths where KMP may be preferred
+pub fn kmp_large_text_threshold() -> Int {
+  50_000
+}
+
+/// Minimum pattern length to consider KMP on large texts
+pub fn kmp_large_text_min_pat() -> Int {
+  8
+}
+
+/// Multiplier applied to max border to decide repetitiveness (default 2)
+pub fn kmp_border_multiplier() -> Int {
+  1
+}
