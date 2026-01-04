@@ -324,6 +324,42 @@ pub fn count(haystack: String, needle: String, overlapping: Bool) -> Int {
   }
 }
 
+/// Experimental: automatic selection between sliding and KMP search.
+///
+/// These `_auto` APIs are experimental and may change. They perform a
+/// heuristic selection (via `choose_search_strategy`) between the
+/// non-allocating sliding matcher and the KMP implementation.
+///
+/// They are provided as opt-in helpers for benchmarking and gradual
+/// rollout; they do not replace the legacy `index_of`/`count` APIs.
+pub fn index_of_auto(text: String, needle: String) -> Result(Int, Nil) {
+  case choose_search_strategy(text, needle) {
+    Sliding -> case sliding_search_all(text, needle) {
+      [first, ..] -> Ok(first)
+      [] -> Error(Nil)
+    }
+    Kmp -> case kmp_search_all(text, needle) {
+      [first, ..] -> Ok(first)
+      [] -> Error(Nil)
+    }
+  }
+}
+
+/// Experimental opt-in count using the heuristic chooser. For
+/// overlapping counts this returns the number of matches found by the
+/// chosen algorithm. For non-overlapping counts this currently defers
+/// to the legacy `count/3` implementation to guarantee identical
+/// semantics.
+pub fn count_auto(haystack: String, needle: String, overlapping: Bool) -> Int {
+  case overlapping {
+    True -> case choose_search_strategy(haystack, needle) {
+      Sliding -> list.length(sliding_search_all(haystack, needle))
+      Kmp -> list.length(kmp_search_all(haystack, needle))
+    }
+    False -> count(haystack, needle, False)
+  }
+}
+
 /// Wraps text with a prefix and suffix.
 ///
 ///   surround("world", "Hello ", "!") -> "Hello world!"
