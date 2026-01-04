@@ -334,14 +334,8 @@ pub fn count(haystack: String, needle: String, overlapping: Bool) -> Int {
 /// rollout; they do not replace the legacy `index_of`/`count` APIs.
 pub fn index_of_auto(text: String, needle: String) -> Result(Int, Nil) {
   case choose_search_strategy(text, needle) {
-    Sliding -> case sliding_search_all(text, needle) {
-      [first, ..] -> Ok(first)
-      [] -> Error(Nil)
-    }
-    Kmp -> case kmp_search_all(text, needle) {
-      [first, ..] -> Ok(first)
-      [] -> Error(Nil)
-    }
+    Sliding -> sliding_index_of(text, needle)
+    Kmp -> kmp_index_of(text, needle)
   }
 }
 
@@ -2166,6 +2160,99 @@ pub fn sliding_search_all(text: String, pattern: String) -> List(Int) {
     string.to_graphemes(text),
     string.to_graphemes(pattern),
   )
+}
+
+// Early-exit sliding index_of: returns first match as Result(Int, Nil)
+fn sliding_index_of_list(text: List(String), pattern: List(String)) -> Result(Int, Nil) {
+  let n = list.length(text)
+  let m = list.length(pattern)
+  case m == 0 {
+    True -> Error(Nil)
+    False -> sliding_index_loop(text, n, m, pattern, 0)
+  }
+}
+
+fn sliding_index_loop(
+  text: List(String),
+  remaining_len: Int,
+  pat_len: Int,
+  pattern: List(String),
+  index: Int,
+) -> Result(Int, Nil) {
+  case remaining_len < pat_len {
+    True -> Error(Nil)
+    False ->
+      case prefix_eq_list(text, pattern) {
+        True -> Ok(index)
+        False -> sliding_index_loop(list.drop(text, 1), remaining_len - 1, pat_len, pattern, index + 1)
+      }
+  }
+}
+
+pub fn sliding_index_of(text: String, pattern: String) -> Result(Int, Nil) {
+  sliding_index_of_list(string.to_graphemes(text), string.to_graphemes(pattern))
+}
+
+// Early-exit KMP index_of: finds first occurrence and returns Ok(index),
+// or Error(Nil) if not found. Operates on grapheme lists.
+fn kmp_index_of_list(text: List(String), pattern: List(String)) -> Result(Int, Nil) {
+  let m = list.length(pattern)
+  case m == 0 {
+    True -> Error(Nil)
+    False -> {
+      let pi = build_prefix_table_list(pattern)
+      kmp_index_loop(text, pattern, pi, 0, 0)
+    }
+  }
+}
+
+fn kmp_index_loop(
+  text: List(String),
+  pattern: List(String),
+  pi: List(Int),
+  i: Int,
+  j: Int,
+) -> Result(Int, Nil) {
+  case list.drop(text, i) {
+    [] -> Error(Nil)
+    [ti, ..] -> {
+      let j1 = case j == 0 {
+        True -> {
+          let p0 = case list.drop(pattern, 0) {
+            [v, ..] -> v
+            [] -> ""
+          }
+          case p0 == ti {
+            True -> 1
+            False -> 0
+          }
+        }
+        False -> {
+          let pj = case list.drop(pattern, j) {
+            [v, ..] -> v
+            [] -> ""
+          }
+          case pj == ti {
+            True -> j + 1
+            False -> kmp_fallback_j(pattern, pi, ti, j)
+          }
+        }
+      }
+
+      case j1 == list.length(pattern) {
+        True -> {
+          let m = list.length(pattern)
+          let start = i - m + 1
+          Ok(start)
+        }
+        False -> kmp_index_loop(text, pattern, pi, i + 1, j1)
+      }
+    }
+  }
+}
+
+pub fn kmp_index_of(text: String, pattern: String) -> Result(Int, Nil) {
+  kmp_index_of_list(string.to_graphemes(text), string.to_graphemes(pattern))
 }
 
 // ============================================================================
