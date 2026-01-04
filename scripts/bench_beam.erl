@@ -44,7 +44,7 @@ gen_random(Alphabet, N) when is_list(Alphabet) ->
   list_to_binary(Chars).
 
 write_csv_header(File) ->
-  io:format(File, "case,scenario_type,text_len,pat_len,matches,index_of_us,index_of_auto_us,kmp_us,sliding_us,count_us,count_auto_us,iter~n", []).
+  io:format(File, "case,scenario_type,text_len,pat_len,max_border,matches,index_of_us,index_of_auto_us,kmp_us,sliding_us,count_us,count_auto_us,iter~n", []).
 
 measure_case(File, Name, Type, Text, Pat, Iter) ->
   %% Compute matches using sliding_search_all for consistency
@@ -53,14 +53,23 @@ measure_case(File, Name, Type, Text, Pat, Iter) ->
     {'EXIT', _} -> -1;
     L -> length(L)
   end,
+  %% Compute prefix table max border for the pattern (0 if failure)
+  Pi = case catch 'str@core':build_prefix_table(Pat) of
+    {'EXIT', _} -> [];
+    R -> R
+  end,
+  MaxBorder = case Pi of
+    [] -> 0;
+    _ -> lists:max(Pi)
+  end,
   Iof = time_fun('str@core', index_of, [Text, Pat], Iter),
   Iaof = time_fun('str@core', index_of_auto, [Text, Pat], Iter),
   Kmp = time_fun('str@core', kmp_search_all, [Text, Pat], Iter),
   Slide = time_fun('str@core', sliding_search_all, [Text, Pat], Iter),
   Cnt = time_fun('str@core', count, [Text, Pat, true], Iter),
   Ca = time_fun('str@core', count_auto, [Text, Pat, true], Iter),
-  io:format(File, "~s,~s,~p,~p,~p,~p,~p,~p,~p,~p,~p,~p~n",
-    [Name, Type, byte_size(Text), byte_size(Pat), Matches, Iof, Iaof, Kmp, Slide, Cnt, Ca, Iter]).
+  io:format(File, "~s,~s,~p,~p,~p,~p,~p,~p,~p,~p,~p,~p,~p~n",
+    [Name, Type, byte_size(Text), byte_size(Pat), MaxBorder, Matches, Iof, Iaof, Kmp, Slide, Cnt, Ca, Iter]).
 
 run() ->
   rand:seed(exsplus, {erlang:monotonic_time(), erlang:unique_integer([positive]), erlang:phash2(node())}),
