@@ -356,6 +356,39 @@ pub fn count_auto(haystack: String, needle: String, overlapping: Bool) -> Int {
   }
 }
 
+/// Experimental: explicit strategy selection APIs.
+///
+/// These functions are provided for users who want deterministic control
+/// over the substring search algorithm. They are experimental and may
+/// change. Prefer these explicit APIs when `index_of_auto` or
+/// `count_auto` produce suboptimal results — `index_of_auto` uses a
+/// heuristic and may choose a slower algorithm on some inputs.
+pub fn index_of_strategy(
+  text: String,
+  needle: String,
+  strategy: SearchStrategy,
+) -> Result(Int, Nil) {
+  case strategy {
+    Sliding -> sliding_index_of(text, needle)
+    Kmp -> kmp_index_of(text, needle)
+  }
+}
+
+pub fn count_strategy(
+  haystack: String,
+  needle: String,
+  overlapping: Bool,
+  strategy: SearchStrategy,
+) -> Int {
+  case overlapping {
+    True -> case strategy {
+      Sliding -> list.length(sliding_search_all(haystack, needle))
+      Kmp -> list.length(kmp_search_all(haystack, needle))
+    }
+    False -> count(haystack, needle, False)
+  }
+}
+
 /// Wraps text with a prefix and suffix.
 ///
 ///   surround("world", "Hello ", "!") -> "Hello world!"
