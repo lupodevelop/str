@@ -1970,12 +1970,7 @@ fn build_prefix_table_loop(
         }
       }
 
-      build_prefix_table_loop(
-        pmap,
-        q + 1,
-        [k_new, ..acc],
-        k_new,
-      )
+      build_prefix_table_loop(pmap, q + 1, [k_new, ..acc], k_new)
     }
   }
 }
@@ -2164,11 +2159,18 @@ pub fn kmp_search_all(text: String, pattern: String) -> List(Int) {
 fn prefix_eq_list(text: List(String), pattern: List(String)) -> Bool {
   case pattern {
     [] -> True
+    _ -> prefix_eq_loop(text, pattern)
+  }
+}
+
+fn prefix_eq_loop(text: List(String), pattern: List(String)) -> Bool {
+  case pattern {
+    [] -> True
     [p_first, ..p_rest] ->
       case text {
         [t_first, ..t_rest] ->
           case t_first == p_first {
-            True -> prefix_eq_list(t_rest, p_rest)
+            True -> prefix_eq_loop(t_rest, p_rest)
             False -> False
           }
         [] -> False
@@ -2187,25 +2189,29 @@ fn sliding_search_loop(
   case remaining_len < pat_len {
     True -> list.reverse(acc)
     False ->
-      case prefix_eq_list(text, pattern) {
-        True ->
-          sliding_search_loop(
-            list.drop(text, 1),
-            remaining_len - 1,
-            pat_len,
-            pattern,
-            index + 1,
-            [index, ..acc],
-          )
-        False ->
-          sliding_search_loop(
-            list.drop(text, 1),
-            remaining_len - 1,
-            pat_len,
-            pattern,
-            index + 1,
-            acc,
-          )
+      case text {
+        [] -> list.reverse(acc)
+        [_, ..rest_text] ->
+          case prefix_eq_list(text, pattern) {
+            True ->
+              sliding_search_loop(
+                rest_text,
+                remaining_len - 1,
+                pat_len,
+                pattern,
+                index + 1,
+                [index, ..acc],
+              )
+            False ->
+              sliding_search_loop(
+                rest_text,
+                remaining_len - 1,
+                pat_len,
+                pattern,
+                index + 1,
+                acc,
+              )
+          }
       }
   }
 }
@@ -2252,16 +2258,20 @@ fn sliding_index_loop(
   case remaining_len < pat_len {
     True -> Error(Nil)
     False ->
-      case prefix_eq_list(text, pattern) {
-        True -> Ok(index)
-        False ->
-          sliding_index_loop(
-            list.drop(text, 1),
-            remaining_len - 1,
-            pat_len,
-            pattern,
-            index + 1,
-          )
+      case text {
+        [] -> Error(Nil)
+        [_, ..rest_text] ->
+          case prefix_eq_list(text, pattern) {
+            True -> Ok(index)
+            False ->
+              sliding_index_loop(
+                rest_text,
+                remaining_len - 1,
+                pat_len,
+                pattern,
+                index + 1,
+              )
+          }
       }
   }
 }
