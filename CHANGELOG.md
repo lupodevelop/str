@@ -20,6 +20,7 @@ All notable changes to this project are documented in this file.
 
 ### Performance & Benchmarking
 - Added BEAM-native benchmark harness (`scripts/bench_beam.erl`) and Python micro-benchmark (`scripts/bench_kmp.py`) to evaluate algorithmic trade-offs on the VM. The BEAM harness now records `max_border` (prefix-table max) in CSV output to help heuristic tuning.
+- Micro-optimizations: converted `prefix_eq_list` and `sliding_index_loop` to iterative implementations and removed redundant list reversals in KMP prefix table construction (also reduced `list.last` usage by tracking `k`), lowering per-iteration overhead and improving BEAM measurements.
 - Observed behavior from benchmarks:
   - KMP performs very well on long and highly repetitive patterns (it no longer exhibits the prior pathological slowdown after optimizations).
   - Sliding wins on short, largely random patterns.
