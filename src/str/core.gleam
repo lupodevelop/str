@@ -9,9 +9,11 @@
 //// All functions operate at the grapheme level rather than codepoint or byte
 //// level, preventing visual corruption of composed characters.
 
+import gleam/dict
 import gleam/int
 import gleam/list
 import gleam/string
+import str/config
 
 /// Detects if a grapheme cluster likely contains emoji components.
 ///
@@ -321,6 +323,71 @@ pub fn count(haystack: String, needle: String, overlapping: Bool) -> Int {
   case nd_len == 0 {
     True -> 0
     False -> count_loop(hs, nd, nd_len, overlapping, 0)
+  }
+}
+
+/// Experimental: automatic selection between sliding and KMP search.
+///
+/// These `_auto` APIs are experimental and may change. They perform a
+/// heuristic selection (via `choose_search_strategy`) between the
+/// non-allocating sliding matcher and the KMP implementation.
+///
+/// They are provided as opt-in helpers for benchmarking and gradual
+/// rollout; they do not replace the legacy `index_of`/`count` APIs.
+pub fn index_of_auto(text: String, needle: String) -> Result(Int, Nil) {
+  case choose_search_strategy(text, needle) {
+    Sliding -> sliding_index_of(text, needle)
+    Kmp -> kmp_index_of(text, needle)
+  }
+}
+
+/// Experimental opt-in count using the heuristic chooser. For
+/// overlapping counts this returns the number of matches found by the
+/// chosen algorithm. For non-overlapping counts this currently defers
+/// to the legacy `count/3` implementation to guarantee identical
+/// semantics.
+pub fn count_auto(haystack: String, needle: String, overlapping: Bool) -> Int {
+  case overlapping {
+    True ->
+      case choose_search_strategy(haystack, needle) {
+        Sliding -> list.length(sliding_search_all(haystack, needle))
+        Kmp -> list.length(kmp_search_all(haystack, needle))
+      }
+    False -> count(haystack, needle, False)
+  }
+}
+
+/// Experimental: explicit strategy selection APIs.
+///
+/// These functions are provided for users who want deterministic control
+/// over the substring search algorithm. They are experimental and may
+/// change. Prefer these explicit APIs when `index_of_auto` or
+/// `count_auto` produce suboptimal results — `index_of_auto` uses a
+/// heuristic and may choose a slower algorithm on some inputs.
+pub fn index_of_strategy(
+  text: String,
+  needle: String,
+  strategy: SearchStrategy,
+) -> Result(Int, Nil) {
+  case strategy {
+    Sliding -> sliding_index_of(text, needle)
+    Kmp -> kmp_index_of(text, needle)
+  }
+}
+
+pub fn count_strategy(
+  haystack: String,
+  needle: String,
+  overlapping: Bool,
+  strategy: SearchStrategy,
+) -> Int {
+  case overlapping {
+    True ->
+      case strategy {
+        Sliding -> list.length(sliding_search_all(haystack, needle))
+        Kmp -> list.length(kmp_search_all(haystack, needle))
+      }
+    False -> count(haystack, needle, False)
   }
 }
 
@@ -808,6 +875,10 @@ fn squeeze_loop(
 }
 
 /// Removes trailing newline if present.
+/// Handles LF, CR, and CRLF sequences. Note: CR+LF pairs are treated as a
+/// single grapheme cluster by standard grapheme segmentation (UAX #29), so this
+/// function correctly removes a trailing CRLF whether the runtime represents
+/// it as a combined grapheme or as separate `\r`/`\n` graphemes.
 ///
 ///   chomp("hello\n") -> "hello"
 ///   chomp("hello\r\n") -> "hello"
@@ -1831,4 +1902,592 @@ pub fn fill(
     Right -> pad_right(text, width, pad)
     Both -> center(text, width, pad)
   }
+}
+
+// ============================================================================
+// KMP SEARCH HELPERS (non-integrated)
+// ---------------------------------------------------------------------------
+// TODO: Integrate KMP into the critical functions `index_of`, `last_index_of`,
+// and `count` using a hybrid heuristic:
+// - Fast-path sliding-match for short patterns / common cases
+// - KMP for long patterns or pathological cases (benchmark-driven)
+// Implement benchmarks and regression tests first; perform the integration
+// in a separate PR and add feature flags/rollback and sanity checks for safety.
+// ============================================================================
+
+/// Build KMP prefix table (also known as failure function) for a pattern
+/// given as a list of grapheme clusters.
+fn build_prefix_table_list(p: List(String)) -> List(Int) {
+  let m = list.length(p)
+  case m == 0 {
+    True -> []
+    False -> {
+      // Build a dict for O(1) access to pattern elements during prefix table build
+      let pattern_pairs = list_to_indexed_pairs(p)
+      let pmap = dict.from_list(pattern_pairs)
+      build_prefix_table_loop(pmap, 1, [0], 0)
+    }
+  }
+}
+
+fn build_prefix_table_loop(
+  pmap: dict.Dict(Int, String),
+  q: Int,
+  acc: List(Int),
+  k: Int,
+) -> List(Int) {
+  let m = dict.size(pmap)
+  case q >= m {
+    True -> list.reverse(acc)
+    False -> {
+      // current pattern element
+      let pq = case dict.get(pmap, q) {
+        Ok(v) -> v
+        Error(_) -> ""
+      }
+
+      // Use module-level fallback to avoid nested function definition
+      let k_new = case k == 0 {
+        True -> {
+          let p0 = case dict.get(pmap, 0) {
+            Ok(v) -> v
+            Error(_) -> ""
+          }
+          case pq == p0 {
+            True -> 1
+            False -> 0
+          }
+        }
+        False -> {
+          let cand = case dict.get(pmap, k) {
+            Ok(v) -> v
+            Error(_) -> ""
+          }
+          case cand == pq {
+            True -> k + 1
+            False -> build_prefix_fallback(pmap, acc, k, pq)
+          }
+        }
+      }
+
+      build_prefix_table_loop(pmap, q + 1, [k_new, ..acc], k_new)
+    }
+  }
+}
+
+fn build_prefix_fallback(
+  pmap: dict.Dict(Int, String),
+  acc_rev: List(Int),
+  k_inner: Int,
+  pq: String,
+) -> Int {
+  case k_inner == 0 {
+    True -> {
+      let p0 = case dict.get(pmap, 0) {
+        Ok(v) -> v
+        Error(_) -> ""
+      }
+      case p0 == pq {
+        True -> 1
+        False -> 0
+      }
+    }
+    False -> {
+      let pk = case dict.get(pmap, k_inner) {
+        Ok(v) -> v
+        Error(_) -> ""
+      }
+      case pk == pq {
+        True -> k_inner + 1
+        False -> {
+          // acc_rev is the prefix table in reversed order; compute prev = acc[k_inner - 1]
+          let len = list.length(acc_rev)
+          let idx = len - k_inner
+          let prev = case list.drop(acc_rev, idx) {
+            [v, ..] -> v
+            [] -> 0
+          }
+          build_prefix_fallback(pmap, acc_rev, prev, pq)
+        }
+      }
+    }
+  }
+}
+
+/// KMP search over lists: returns list of start indices (0-based) of matches
+/// in the text (both provided as grapheme lists). Returns [] if pattern is
+/// empty or not found.
+fn kmp_search_all_list(text: List(String), pattern: List(String)) -> List(Int) {
+  let m = list.length(pattern)
+
+  case m == 0 {
+    True -> []
+    False -> {
+      let pi = build_prefix_table_list(pattern)
+      // Build index->value maps for pattern and pi to allow O(1) lookups
+      let pattern_pairs = list_to_indexed_pairs(pattern)
+      let pi_pairs = list_to_indexed_pairs(pi)
+      let pmap = dict.from_list(pattern_pairs)
+      let pimap = dict.from_list(pi_pairs)
+      // Pass the remaining text list directly to avoid repeated list.drop
+      kmp_loop(pmap, pimap, text, 0, 0, [])
+    }
+  }
+}
+
+fn list_to_indexed_pairs(xs: List(a)) -> List(#(Int, a)) {
+  list_to_indexed_pairs_loop(xs, 0, [])
+}
+
+fn list_to_indexed_pairs_loop(
+  xs: List(a),
+  idx: Int,
+  acc: List(#(Int, a)),
+) -> List(#(Int, a)) {
+  case xs {
+    [] -> list.reverse(acc)
+    [first, ..rest] ->
+      list_to_indexed_pairs_loop(rest, idx + 1, [#(idx, first), ..acc])
+  }
+}
+
+fn kmp_loop(
+  pmap: dict.Dict(Int, String),
+  pimap: dict.Dict(Int, Int),
+  remaining_text: List(String),
+  i: Int,
+  j: Int,
+  acc: List(Int),
+) -> List(Int) {
+  case remaining_text {
+    [] -> list.reverse(acc)
+    [ti, ..rest_text] -> {
+      let j1 = case j == 0 {
+        True -> {
+          let p0 = case dict.get(pmap, 0) {
+            Ok(v) -> v
+            Error(_) -> ""
+          }
+          case p0 == ti {
+            True -> 1
+            False -> 0
+          }
+        }
+        False -> {
+          let pj = case dict.get(pmap, j) {
+            Ok(v) -> v
+            Error(_) -> ""
+          }
+          case pj == ti {
+            True -> j + 1
+            False -> kmp_fallback_j(pmap, pimap, ti, j)
+          }
+        }
+      }
+
+      case j1 == dict.size(pmap) {
+        True -> {
+          let m = dict.size(pmap)
+          let start = i - m + 1
+          let jnext = case dict.get(pimap, m - 1) {
+            Ok(v) -> v
+            Error(_) -> 0
+          }
+          kmp_loop(pmap, pimap, rest_text, i + 1, jnext, [start, ..acc])
+        }
+        False -> kmp_loop(pmap, pimap, rest_text, i + 1, j1, acc)
+      }
+    }
+  }
+}
+
+fn kmp_fallback_j(
+  pmap: dict.Dict(Int, String),
+  pimap: dict.Dict(Int, Int),
+  ti: String,
+  j_in: Int,
+) -> Int {
+  case j_in == 0 {
+    True -> {
+      let p0 = case dict.get(pmap, 0) {
+        Ok(v) -> v
+        Error(_) -> ""
+      }
+      case p0 == ti {
+        True -> 1
+        False -> 0
+      }
+    }
+    False -> {
+      let pj = case dict.get(pmap, j_in) {
+        Ok(v) -> v
+        Error(_) -> ""
+      }
+      case pj == ti {
+        True -> j_in + 1
+        False -> {
+          let prev = case dict.get(pimap, j_in - 1) {
+            Ok(v) -> v
+            Error(_) -> 0
+          }
+          kmp_fallback_j(pmap, pimap, ti, prev)
+        }
+      }
+    }
+  }
+}
+
+/// Public wrappers accepting `String` inputs for easier testing.
+pub fn build_prefix_table(pattern: String) -> List(Int) {
+  build_prefix_table_list(string.to_graphemes(pattern))
+}
+
+pub fn kmp_search_all(text: String, pattern: String) -> List(Int) {
+  kmp_search_all_list(string.to_graphemes(text), string.to_graphemes(pattern))
+}
+
+/// Build KMP precomputed maps for a pattern to enable reuse across multiple
+/// searches. Returns a tuple `#(pmap, pimap)` where:
+/// - `pmap` is a `Dict(Int, String)` mapping index -> pattern grapheme
+/// - `pimap` is a `Dict(Int, Int)` mapping index -> prefix table value
+pub fn build_kmp_maps(
+  pattern: String,
+) -> #(dict.Dict(Int, String), dict.Dict(Int, Int)) {
+  let p = string.to_graphemes(pattern)
+  let pi = build_prefix_table_list(p)
+  let pattern_pairs = list_to_indexed_pairs(p)
+  let pi_pairs = list_to_indexed_pairs(pi)
+  let pmap = dict.from_list(pattern_pairs)
+  let pimap = dict.from_list(pi_pairs)
+  #(pmap, pimap)
+}
+
+/// KMP search using precomputed `pmap` and `pimap`. Useful when the same
+/// pattern is searched against many texts to avoid rebuilding maps repeatedly.
+pub fn kmp_search_all_with_maps(
+  text: String,
+  pattern: String,
+  pmap: dict.Dict(Int, String),
+  pimap: dict.Dict(Int, Int),
+) -> List(Int) {
+  kmp_search_all_list_with_maps(
+    string.to_graphemes(text),
+    string.to_graphemes(pattern),
+    pmap,
+    pimap,
+  )
+}
+
+fn kmp_search_all_list_with_maps(
+  text: List(String),
+  pattern: List(String),
+  pmap: dict.Dict(Int, String),
+  pimap: dict.Dict(Int, Int),
+) -> List(Int) {
+  let m = list.length(pattern)
+
+  case m == 0 {
+    True -> []
+    False -> kmp_loop(pmap, pimap, text, 0, 0, [])
+  }
+}
+
+// ============================================================================
+// SLIDING-MATCH HELPERS (non-integrated, non-allocating)
+// ---------------------------------------------------------------------------
+// TODO: Integrate sliding-match fast-path into `index_of`, `last_index_of`,
+// and `count` to reduce allocations for common (short-pattern) cases.
+// Implement these helpers first (non-integrating), add micro-benchmarks and
+// regression tests, then apply the integration in a separate PR with
+// configurable thresholds and a feature flag for safety/rollback.
+// ============================================================================
+
+fn prefix_eq_list(text: List(String), pattern: List(String)) -> Bool {
+  case pattern {
+    [] -> True
+    _ -> prefix_eq_loop(text, pattern)
+  }
+}
+
+fn prefix_eq_loop(text: List(String), pattern: List(String)) -> Bool {
+  case pattern {
+    [] -> True
+    [p_first, ..p_rest] ->
+      case text {
+        [t_first, ..t_rest] ->
+          case t_first == p_first {
+            True -> prefix_eq_loop(t_rest, p_rest)
+            False -> False
+          }
+        [] -> False
+      }
+  }
+}
+
+fn sliding_search_loop(
+  text: List(String),
+  remaining_len: Int,
+  pat_len: Int,
+  pattern: List(String),
+  index: Int,
+  acc: List(Int),
+) -> List(Int) {
+  case remaining_len < pat_len {
+    True -> list.reverse(acc)
+    False ->
+      case text {
+        [] -> list.reverse(acc)
+        [_, ..rest_text] ->
+          case prefix_eq_list(text, pattern) {
+            True ->
+              sliding_search_loop(
+                rest_text,
+                remaining_len - 1,
+                pat_len,
+                pattern,
+                index + 1,
+                [index, ..acc],
+              )
+            False ->
+              sliding_search_loop(
+                rest_text,
+                remaining_len - 1,
+                pat_len,
+                pattern,
+                index + 1,
+                acc,
+              )
+          }
+      }
+  }
+}
+
+fn sliding_search_all_list(
+  text: List(String),
+  pattern: List(String),
+) -> List(Int) {
+  let n = list.length(text)
+  let m = list.length(pattern)
+  case m == 0 {
+    True -> []
+    False -> sliding_search_loop(text, n, m, pattern, 0, [])
+  }
+}
+
+pub fn sliding_search_all(text: String, pattern: String) -> List(Int) {
+  sliding_search_all_list(
+    string.to_graphemes(text),
+    string.to_graphemes(pattern),
+  )
+}
+
+// Early-exit sliding index_of: returns first match as Result(Int, Nil)
+fn sliding_index_of_list(
+  text: List(String),
+  pattern: List(String),
+) -> Result(Int, Nil) {
+  let n = list.length(text)
+  let m = list.length(pattern)
+  case m == 0 {
+    True -> Error(Nil)
+    False -> sliding_index_loop(text, n, m, pattern, 0)
+  }
+}
+
+fn sliding_index_loop(
+  text: List(String),
+  remaining_len: Int,
+  pat_len: Int,
+  pattern: List(String),
+  index: Int,
+) -> Result(Int, Nil) {
+  case remaining_len < pat_len {
+    True -> Error(Nil)
+    False ->
+      case text {
+        [] -> Error(Nil)
+        [_, ..rest_text] ->
+          case prefix_eq_list(text, pattern) {
+            True -> Ok(index)
+            False ->
+              sliding_index_loop(
+                rest_text,
+                remaining_len - 1,
+                pat_len,
+                pattern,
+                index + 1,
+              )
+          }
+      }
+  }
+}
+
+pub fn sliding_index_of(text: String, pattern: String) -> Result(Int, Nil) {
+  sliding_index_of_list(string.to_graphemes(text), string.to_graphemes(pattern))
+}
+
+// Early-exit KMP index_of: finds first occurrence and returns Ok(index),
+// or Error(Nil) if not found. Operates on grapheme lists.
+fn kmp_index_of_list(
+  text: List(String),
+  pattern: List(String),
+) -> Result(Int, Nil) {
+  let m = list.length(pattern)
+  case m == 0 {
+    True -> Error(Nil)
+    False -> {
+      let pi = build_prefix_table_list(pattern)
+      let pattern_pairs = list_to_indexed_pairs(pattern)
+      let pi_pairs = list_to_indexed_pairs(pi)
+      let pmap = dict.from_list(pattern_pairs)
+      let pimap = dict.from_list(pi_pairs)
+      kmp_index_loop(pmap, pimap, text, 0, 0)
+    }
+  }
+}
+
+fn kmp_index_loop(
+  pmap: dict.Dict(Int, String),
+  pimap: dict.Dict(Int, Int),
+  remaining_text: List(String),
+  i: Int,
+  j: Int,
+) -> Result(Int, Nil) {
+  case remaining_text {
+    [] -> Error(Nil)
+    [ti, ..rest_text] -> {
+      let j1 = case j == 0 {
+        True -> {
+          let p0 = case dict.get(pmap, 0) {
+            Ok(v) -> v
+            Error(_) -> ""
+          }
+          case p0 == ti {
+            True -> 1
+            False -> 0
+          }
+        }
+        False -> {
+          let pj = case dict.get(pmap, j) {
+            Ok(v) -> v
+            Error(_) -> ""
+          }
+          case pj == ti {
+            True -> j + 1
+            False -> kmp_fallback_j(pmap, pimap, ti, j)
+          }
+        }
+      }
+
+      case j1 == dict.size(pmap) {
+        True -> {
+          let m = dict.size(pmap)
+          let start = i - m + 1
+          Ok(start)
+        }
+        False -> kmp_index_loop(pmap, pimap, rest_text, i + 1, j1)
+      }
+    }
+  }
+}
+
+pub fn kmp_index_of(text: String, pattern: String) -> Result(Int, Nil) {
+  kmp_index_of_list(string.to_graphemes(text), string.to_graphemes(pattern))
+}
+
+/// KMP index search using precomputed `pmap` and `pimap`. Useful for repeated
+/// searches with the same pattern.
+pub fn kmp_index_of_with_maps(
+  text: String,
+  pattern: String,
+  pmap: dict.Dict(Int, String),
+  pimap: dict.Dict(Int, Int),
+) -> Result(Int, Nil) {
+  kmp_index_of_list_with_maps(
+    string.to_graphemes(text),
+    string.to_graphemes(pattern),
+    pmap,
+    pimap,
+  )
+}
+
+fn kmp_index_of_list_with_maps(
+  text: List(String),
+  pattern: List(String),
+  pmap: dict.Dict(Int, String),
+  pimap: dict.Dict(Int, Int),
+) -> Result(Int, Nil) {
+  let m = list.length(pattern)
+  case m == 0 {
+    True -> Error(Nil)
+    False -> kmp_index_loop(pmap, pimap, text, 0, 0)
+  }
+}
+
+// ============================================================================
+// SEARCH STRATEGY (heuristic helper — non-integrated)
+// ---------------------------------------------------------------------------
+// TODO: This helper chooses between Sliding and KMP based on empirical
+// thresholds. It is intentionally non-integrated: we will add a wrapper for
+// `index_of` / `count` in a follow-up PR after benchmarking and testing.
+// ============================================================================
+
+pub type SearchStrategy {
+  Sliding
+  Kmp
+}
+
+fn max_int_list(xs: List(Int)) -> Int {
+  case xs {
+    [] -> 0
+    [first, ..rest] ->
+      list.fold(rest, first, fn(acc, v) {
+        case v > acc {
+          True -> v
+          False -> acc
+        }
+      })
+  }
+}
+
+fn choose_search_strategy_list(
+  text: List(String),
+  pattern: List(String),
+) -> SearchStrategy {
+  let n = list.length(text)
+  let m = list.length(pattern)
+  case m == 0 {
+    True -> Sliding
+    False -> {
+      // Build prefix table to detect repetitiveness (max border)
+      let pi = build_prefix_table_list(pattern)
+      let max_border = max_int_list(pi)
+
+      // Tunable thresholds from config
+      let min_m = config.kmp_min_pattern_len()
+      let large_n = config.kmp_large_text_threshold()
+      let large_m = config.kmp_large_text_min_pat()
+      let border_mul = config.kmp_border_multiplier()
+
+      case m >= min_m {
+        True -> Kmp
+        False ->
+          case n >= large_n && m >= large_m {
+            True -> Kmp
+            False ->
+              case max_border * border_mul >= m {
+                True -> Kmp
+                False -> Sliding
+              }
+          }
+      }
+    }
+  }
+}
+
+pub fn choose_search_strategy(text: String, pattern: String) -> SearchStrategy {
+  choose_search_strategy_list(
+    string.to_graphemes(text),
+    string.to_graphemes(pattern),
+  )
 }
