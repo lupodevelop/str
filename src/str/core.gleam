@@ -2146,6 +2146,52 @@ pub fn kmp_search_all(text: String, pattern: String) -> List(Int) {
   kmp_search_all_list(string.to_graphemes(text), string.to_graphemes(pattern))
 }
 
+/// Build KMP precomputed maps for a pattern to enable reuse across multiple
+/// searches. Returns a tuple `#(pmap, pimap)` where:
+/// - `pmap` is a `Dict(Int, String)` mapping index -> pattern grapheme
+/// - `pimap` is a `Dict(Int, Int)` mapping index -> prefix table value
+pub fn build_kmp_maps(
+  pattern: String,
+) -> #(dict.Dict(Int, String), dict.Dict(Int, Int)) {
+  let p = string.to_graphemes(pattern)
+  let pi = build_prefix_table_list(p)
+  let pattern_pairs = list_to_indexed_pairs(p)
+  let pi_pairs = list_to_indexed_pairs(pi)
+  let pmap = dict.from_list(pattern_pairs)
+  let pimap = dict.from_list(pi_pairs)
+  #(pmap, pimap)
+}
+
+/// KMP search using precomputed `pmap` and `pimap`. Useful when the same
+/// pattern is searched against many texts to avoid rebuilding maps repeatedly.
+pub fn kmp_search_all_with_maps(
+  text: String,
+  pattern: String,
+  pmap: dict.Dict(Int, String),
+  pimap: dict.Dict(Int, Int),
+) -> List(Int) {
+  kmp_search_all_list_with_maps(
+    string.to_graphemes(text),
+    string.to_graphemes(pattern),
+    pmap,
+    pimap,
+  )
+}
+
+fn kmp_search_all_list_with_maps(
+  text: List(String),
+  pattern: List(String),
+  pmap: dict.Dict(Int, String),
+  pimap: dict.Dict(Int, Int),
+) -> List(Int) {
+  let m = list.length(pattern)
+
+  case m == 0 {
+    True -> []
+    False -> kmp_loop(pmap, pimap, text, 0, 0, [])
+  }
+}
+
 // ============================================================================
 // SLIDING-MATCH HELPERS (non-integrated, non-allocating)
 // ---------------------------------------------------------------------------
@@ -2347,6 +2393,35 @@ fn kmp_index_loop(
 
 pub fn kmp_index_of(text: String, pattern: String) -> Result(Int, Nil) {
   kmp_index_of_list(string.to_graphemes(text), string.to_graphemes(pattern))
+}
+
+/// KMP index search using precomputed `pmap` and `pimap`. Useful for repeated
+/// searches with the same pattern.
+pub fn kmp_index_of_with_maps(
+  text: String,
+  pattern: String,
+  pmap: dict.Dict(Int, String),
+  pimap: dict.Dict(Int, Int),
+) -> Result(Int, Nil) {
+  kmp_index_of_list_with_maps(
+    string.to_graphemes(text),
+    string.to_graphemes(pattern),
+    pmap,
+    pimap,
+  )
+}
+
+fn kmp_index_of_list_with_maps(
+  text: List(String),
+  pattern: List(String),
+  pmap: dict.Dict(Int, String),
+  pimap: dict.Dict(Int, Int),
+) -> Result(Int, Nil) {
+  let m = list.length(pattern)
+  case m == 0 {
+    True -> Error(Nil)
+    False -> kmp_index_loop(pmap, pimap, text, 0, 0)
+  }
 }
 
 // ============================================================================
