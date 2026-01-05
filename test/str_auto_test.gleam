@@ -36,5 +36,4 @@ pub fn count_auto_matches_legacy_test() {
     assert core.count_auto(text, pat, False) == core.count(text, pat, False)
   })
 }
-
 // helper removed: previously unused `repeat` function

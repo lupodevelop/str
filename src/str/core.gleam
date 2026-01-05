@@ -9,10 +9,10 @@
 //// All functions operate at the grapheme level rather than codepoint or byte
 //// level, preventing visual corruption of composed characters.
 
+import gleam/dict
 import gleam/int
 import gleam/list
 import gleam/string
-import gleam/dict
 import str/config
 
 /// Detects if a grapheme cluster likely contains emoji components.
@@ -348,10 +348,11 @@ pub fn index_of_auto(text: String, needle: String) -> Result(Int, Nil) {
 /// semantics.
 pub fn count_auto(haystack: String, needle: String, overlapping: Bool) -> Int {
   case overlapping {
-    True -> case choose_search_strategy(haystack, needle) {
-      Sliding -> list.length(sliding_search_all(haystack, needle))
-      Kmp -> list.length(kmp_search_all(haystack, needle))
-    }
+    True ->
+      case choose_search_strategy(haystack, needle) {
+        Sliding -> list.length(sliding_search_all(haystack, needle))
+        Kmp -> list.length(kmp_search_all(haystack, needle))
+      }
     False -> count(haystack, needle, False)
   }
 }
@@ -381,10 +382,11 @@ pub fn count_strategy(
   strategy: SearchStrategy,
 ) -> Int {
   case overlapping {
-    True -> case strategy {
-      Sliding -> list.length(sliding_search_all(haystack, needle))
-      Kmp -> list.length(kmp_search_all(haystack, needle))
-    }
+    True ->
+      case strategy {
+        Sliding -> list.length(sliding_search_all(haystack, needle))
+        Kmp -> list.length(kmp_search_all(haystack, needle))
+      }
     False -> count(haystack, needle, False)
   }
 }
@@ -2034,10 +2036,15 @@ fn list_to_indexed_pairs(xs: List(a)) -> List(#(Int, a)) {
   list_to_indexed_pairs_loop(xs, 0, [])
 }
 
-fn list_to_indexed_pairs_loop(xs: List(a), idx: Int, acc: List(#(Int, a))) -> List(#(Int, a)) {
+fn list_to_indexed_pairs_loop(
+  xs: List(a),
+  idx: Int,
+  acc: List(#(Int, a)),
+) -> List(#(Int, a)) {
   case xs {
     [] -> list.reverse(acc)
-    [first, ..rest] -> list_to_indexed_pairs_loop(rest, idx + 1, [#(idx, first), ..acc])
+    [first, ..rest] ->
+      list_to_indexed_pairs_loop(rest, idx + 1, [#(idx, first), ..acc])
   }
 }
 
@@ -2215,7 +2222,10 @@ pub fn sliding_search_all(text: String, pattern: String) -> List(Int) {
 }
 
 // Early-exit sliding index_of: returns first match as Result(Int, Nil)
-fn sliding_index_of_list(text: List(String), pattern: List(String)) -> Result(Int, Nil) {
+fn sliding_index_of_list(
+  text: List(String),
+  pattern: List(String),
+) -> Result(Int, Nil) {
   let n = list.length(text)
   let m = list.length(pattern)
   case m == 0 {
@@ -2236,7 +2246,14 @@ fn sliding_index_loop(
     False ->
       case prefix_eq_list(text, pattern) {
         True -> Ok(index)
-        False -> sliding_index_loop(list.drop(text, 1), remaining_len - 1, pat_len, pattern, index + 1)
+        False ->
+          sliding_index_loop(
+            list.drop(text, 1),
+            remaining_len - 1,
+            pat_len,
+            pattern,
+            index + 1,
+          )
       }
   }
 }
@@ -2247,7 +2264,10 @@ pub fn sliding_index_of(text: String, pattern: String) -> Result(Int, Nil) {
 
 // Early-exit KMP index_of: finds first occurrence and returns Ok(index),
 // or Error(Nil) if not found. Operates on grapheme lists.
-fn kmp_index_of_list(text: List(String), pattern: List(String)) -> Result(Int, Nil) {
+fn kmp_index_of_list(
+  text: List(String),
+  pattern: List(String),
+) -> Result(Int, Nil) {
   let m = list.length(pattern)
   case m == 0 {
     True -> Error(Nil)
