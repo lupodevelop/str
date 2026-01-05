@@ -1921,33 +1921,37 @@ fn build_prefix_table_list(p: List(String)) -> List(Int) {
   let m = list.length(p)
   case m == 0 {
     True -> []
-    False -> build_prefix_table_loop(p, 1, [0])
+    False -> {
+      // Build a dict for O(1) access to pattern elements during prefix table build
+      let pattern_pairs = list_to_indexed_pairs(p)
+      let pmap = dict.from_list(pattern_pairs)
+      build_prefix_table_loop(pmap, 1, [0], 0)
+    }
   }
 }
 
-fn build_prefix_table_loop(p: List(String), q: Int, acc: List(Int)) -> List(Int) {
-  let m = list.length(p)
+fn build_prefix_table_loop(
+  pmap: dict.Dict(Int, String),
+  q: Int,
+  acc: List(Int),
+  k: Int,
+) -> List(Int) {
+  let m = dict.size(pmap)
   case q >= m {
-    True -> acc
+    True -> list.reverse(acc)
     False -> {
       // current pattern element
-      let pq = case list.drop(p, q) {
-        [v, ..] -> v
-        [] -> ""
-      }
-
-      // current k is last entry in acc
-      let k = case list.last(acc) {
+      let pq = case dict.get(pmap, q) {
         Ok(v) -> v
-        Error(_) -> 0
+        Error(_) -> ""
       }
 
       // Use module-level fallback to avoid nested function definition
       let k_new = case k == 0 {
         True -> {
-          let p0 = case list.drop(p, 0) {
-            [v, ..] -> v
-            [] -> ""
+          let p0 = case dict.get(pmap, 0) {
+            Ok(v) -> v
+            Error(_) -> ""
           }
           case pq == p0 {
             True -> 1
@@ -1955,37 +1959,38 @@ fn build_prefix_table_loop(p: List(String), q: Int, acc: List(Int)) -> List(Int)
           }
         }
         False -> {
-          let cand = case list.drop(p, k) {
-            [v, ..] -> v
-            [] -> ""
+          let cand = case dict.get(pmap, k) {
+            Ok(v) -> v
+            Error(_) -> ""
           }
           case cand == pq {
             True -> k + 1
-            False -> build_prefix_fallback(p, acc, k, pq)
+            False -> build_prefix_fallback(pmap, acc, k, pq)
           }
         }
       }
 
       build_prefix_table_loop(
-        p,
+        pmap,
         q + 1,
-        list.reverse([k_new, ..list.reverse(acc)]),
+        [k_new, ..acc],
+        k_new,
       )
     }
   }
 }
 
 fn build_prefix_fallback(
-  p: List(String),
-  acc: List(Int),
+  pmap: dict.Dict(Int, String),
+  acc_rev: List(Int),
   k_inner: Int,
   pq: String,
 ) -> Int {
   case k_inner == 0 {
     True -> {
-      let p0 = case list.drop(p, 0) {
-        [v, ..] -> v
-        [] -> ""
+      let p0 = case dict.get(pmap, 0) {
+        Ok(v) -> v
+        Error(_) -> ""
       }
       case p0 == pq {
         True -> 1
@@ -1993,18 +1998,21 @@ fn build_prefix_fallback(
       }
     }
     False -> {
-      let pk = case list.drop(p, k_inner) {
-        [v, ..] -> v
-        [] -> ""
+      let pk = case dict.get(pmap, k_inner) {
+        Ok(v) -> v
+        Error(_) -> ""
       }
       case pk == pq {
         True -> k_inner + 1
         False -> {
-          let prev = case list.drop(acc, k_inner - 1) {
+          // acc_rev is the prefix table in reversed order; compute prev = acc[k_inner - 1]
+          let len = list.length(acc_rev)
+          let idx = len - k_inner
+          let prev = case list.drop(acc_rev, idx) {
             [v, ..] -> v
             [] -> 0
           }
-          build_prefix_fallback(p, acc, prev, pq)
+          build_prefix_fallback(pmap, acc_rev, prev, pq)
         }
       }
     }
