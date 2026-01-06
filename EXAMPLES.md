@@ -30,6 +30,43 @@ pub fn search_examples() {
 }
 ```
 
+### Experimental Search Strategies & Caching (1.2.2)
+
+```gleam
+import str/core
+
+pub fn search_strategy_examples() {
+  // 1) Use the automatic heuristic (experimental)
+  // The heuristic chooses between a sliding matcher and KMP based on
+  // pattern/text characteristics. It is opt-in and may choose a
+  // non-optimal strategy in some cases.
+  let auto = core.index_of_auto("some long text...", "pat")
+
+  // 2) Force a specific strategy: use this when performance is critical
+  // and you know which algorithm is better for your input shape.
+  let forced_kmp = core.index_of_strategy("long text...", "pattern", core.Kmp)
+  let forced_sliding = core.index_of_strategy("short text", "pat", core.Sliding)
+
+  // 3) Caching KMP maps: precompute pattern maps once and reuse them
+  // across multiple searches to avoid rebuilding prefix tables.
+  let pattern = "abababab..."
+  let maps = core.build_kmp_maps(pattern)
+  let pmap = maps.0
+  let pimap = maps.1
+
+  // Reuse maps across many texts
+  let idx1 = core.kmp_index_of_with_maps("first long text...", pattern, pmap, pimap)
+  let occurrences = core.kmp_search_all_with_maps("another text...", pattern, pmap, pimap)
+
+  // Guidance: prefer explicit strategy or caching in hot loops; use
+  // `index_of_auto` for convenience and exploratory testing.
+}
+```
+
+> Note: `index_of_auto` is experimental and its behavior depends on tunable
+> thresholds in `src/str/config.gleam`. For production-critical paths,
+> prefer `index_of_strategy` or precomputing maps via `build_kmp_maps`.
+
 ### Grapheme-Aware Length and String Checks (NEW in 1.1.0)
 
 ```gleam
