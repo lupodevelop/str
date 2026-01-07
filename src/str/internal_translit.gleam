@@ -87,8 +87,6 @@ pub fn replacements() -> List(#(String, String)) {
     #("ŗ", "r"),
     #("Ū", "U"),
     #("ū", "u"),
-    #("Ļ", "L"),
-    #("ļ", "l"),
     #("Ķ", "K"),
     #("ķ", "k"),
     #("Ģ", "G"),
@@ -99,8 +97,7 @@ pub fn replacements() -> List(#(String, String)) {
     #("į", "i"),
     #("Ų", "U"),
     #("ų", "u"),
-    #("Ą", "A"),
-    #("ą", "a"),
+    // Central European
     #("Ć", "C"),
     #("ć", "c"),
     #("Č", "C"),
@@ -109,8 +106,6 @@ pub fn replacements() -> List(#(String, String)) {
     #("ď", "d"),
     #("Đ", "D"),
     #("đ", "d"),
-    #("Ē", "E"),
-    #("ē", "e"),
     #("Ę", "E"),
     #("ę", "e"),
     #("Ě", "E"),
@@ -157,22 +152,11 @@ pub fn replacements() -> List(#(String, String)) {
     #("Ð", "D"),
     #("ð", "d"),
     // Additional Latin Extended-A
-    #("Į", "I"),
-    #("į", "i"),
     #("Ů", "U"),
     #("ů", "u"),
-    #("Ą", "A"),
-    #("ą", "a"),
     // Czech/Slovak extras
-    #("ě", "e"),
-    #("Ě", "E"),
-    #("Ť", "T"),
-    #("ť", "t"),
     #("Ŕ", "R"),
     #("ŕ", "r"),
-    // Lithuanian dot-above e
-    #("ė", "e"),
-    #("Ė", "E"),
   ]
 }
 

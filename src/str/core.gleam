@@ -2166,25 +2166,18 @@ pub fn build_kmp_maps(
 /// pattern is searched against many texts to avoid rebuilding maps repeatedly.
 pub fn kmp_search_all_with_maps(
   text: String,
-  pattern: String,
   pmap: dict.Dict(Int, String),
   pimap: dict.Dict(Int, Int),
 ) -> List(Int) {
-  kmp_search_all_list_with_maps(
-    string.to_graphemes(text),
-    string.to_graphemes(pattern),
-    pmap,
-    pimap,
-  )
+  kmp_search_all_list_with_maps(string.to_graphemes(text), pmap, pimap)
 }
 
 fn kmp_search_all_list_with_maps(
   text: List(String),
-  pattern: List(String),
   pmap: dict.Dict(Int, String),
   pimap: dict.Dict(Int, Int),
 ) -> List(Int) {
-  let m = list.length(pattern)
+  let m = dict.size(pmap)
 
   case m == 0 {
     True -> []

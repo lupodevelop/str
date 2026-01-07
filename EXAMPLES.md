@@ -56,7 +56,7 @@ pub fn search_strategy_examples() {
 
   // Reuse maps across many texts
   let idx1 = core.kmp_index_of_with_maps("first long text...", pattern, pmap, pimap)
-  let occurrences = core.kmp_search_all_with_maps("another text...", pattern, pmap, pimap)
+  let occurrences = core.kmp_search_all_with_maps("another text...", pmap, pimap)
 
   // Guidance: prefer explicit strategy or caching in hot loops; use
   // `index_of_auto` for convenience and exploratory testing.
@@ -431,7 +431,7 @@ This gives you full control over decomposition/normalization order.
 The project uses Gleam's test runner. Example commands:
 
 ```sh
-# run all tests (325 tests)
+# run all tests
 gleam test
 
 # run a single test file (shell navigation)
