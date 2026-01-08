@@ -259,14 +259,30 @@ extra.slugify_opts("Hello World", 0, "_", False)   // → "hello_world"
 
 ---
 
-## 🏗️ Module Structure
+## 🏗️ Module Guide
+
+### Which module should I use?
+
+| Module | When to use | Import |
+|--------|-------------|--------|
+| **`str`** | Most common operations | `import str` |
+| **`str/core`** | Full grapheme-aware API, advanced features | `import str/core` |
+| **`str/extra`** | ASCII folding, slugs, case conversions | `import str/extra` |
+| **`str/tokenize`** | Reference implementation (pedagogic only) | `import str/tokenize` |
+
+**Quick start:** Use `import str` for everyday needs. The main `str` module re-exports commonly used functions from `core` and `extra`.
+
+**Advanced users:** Import `str/core` and `str/extra` directly when you need the complete API or want explicit control.
+
+### Module structure
 
 ```
 str/
-├── core        # Grapheme-aware core utilities
-├── extra       # ASCII folding, slugs, case conversions
-├── tokenize    # Pure-Gleam tokenizer (reference)
-└── internal_*  # Character tables (internal)
+├── str.gleam       # Main module (re-exports common functions)
+├── core.gleam      # Grapheme-aware utilities
+├── extra.gleam     # ASCII folding, slugs, case conversions
+├── tokenize.gleam  # Pure-Gleam tokenizer (reference)
+└── internal_*      # Character tables (not public API)
 ```
 
 ---
