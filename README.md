@@ -116,42 +116,30 @@ pub fn main() {
 
 ### ⚠️ Experimental: Search Strategies
 
-We added experimental search strategies to provide faster, algorithmic alternatives for substring search in different scenarios.
+**Algorithms:**
+- **KMP**: optimized for long/repetitive patterns
+- **Sliding**: fast for short patterns, zero allocations
 
-- New algorithms:
-  - **KMP** (Knuth–Morris–Pratt): fast for long or highly repetitive patterns.
-  - **Sliding-match**: non-allocating, often faster for short/non-repetitive patterns.
+**APIs:**
 
-- Experimental (opt-in) APIs:
-  - `core.index_of_auto(text, pattern)` — automatic heuristic choosing between KMP and Sliding.
-  - `core.count_auto(haystack, pattern, overlapping)` — automatic count using the heuristic.
-  - `core.index_of_strategy(text, pattern, core.Kmp|core.Sliding)` — explicit selection of algorithm.
-  - `core.count_strategy(haystack, pattern, overlapping, core.Kmp|core.Sliding)` — explicit count with chosen algorithm.
+| Function | Description |
+|----------|-------------|
+| `index_of_auto(text, pattern)` | Auto-select algorithm (heuristic) |
+| `index_of_strategy(text, pattern, Kmp\|Sliding)` | Explicit algorithm choice |
+| `count_auto(text, pattern, overlapping)` | Auto-select for counting |
+| `count_strategy(text, pattern, overlapping, Kmp\|Sliding)` | Explicit count algorithm |
 
-- Configuration (tunable thresholds):
-  - See `src/str/config.gleam` for:
-    - `kmp_min_pattern_len()`
-    - `kmp_large_text_threshold()`
-    - `kmp_large_text_min_pat()`
-    - `kmp_border_multiplier()`
-  - These defaults are conservative; projects can replace `str/config.gleam` during their build to change behavior.
-
-- Notes & guidance:
-  - `index_of_auto` is experimental and uses a heuristic based on pattern length, text length and prefix-table repetitiveness. It may choose a non-optimal algorithm for some inputs. For performance-critical code prefer the explicit `index_of_strategy` or `count_strategy` APIs.
-  - Use `scripts/bench_beam.erl` (BEAM-native) and `scripts/bench_kmp.py` to measure and tune thresholds. The BEAM harness now emits `max_border` (prefix table max) into CSV results to help heuristic tuning.
-
-Examples:
+**Examples:**
 
 ```gleam
-// Explicitly force KMP
+// Force KMP explicitly
 core.index_of_strategy("long text...", "pattern", core.Kmp)
 
-// Use the automatic heuristic (experimental)
+// Let heuristic decide (experimental)
 core.index_of_auto("some text", "pat")
-
-// Count occurrences with explicit strategy
-core.count_strategy("abababab", "ab", True, core.Kmp)
 ```
+
+> **Note:** `_auto` variants use heuristics and may not always choose optimally. For performance-critical code, use `_strategy` variants. Configure thresholds in `src/str/config.gleam`.
 
 ### 🧩 Splitting & Partitioning
 
