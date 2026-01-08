@@ -16,6 +16,10 @@ All notable changes to this project are documented in this file.
 Contributed by: Daniele (`lupodevelop`)
 Suggested by: Louis Pilfold (`@lpil`)
 
+Suggested by: NNB (`@NNBnh`)
+Suggested change: updated README logo pointer to use the raw.githubusercontent URL
+(pointing to the repository commit) so the logo is resolvable on Hexdocs.
+
 ## [1.2.2] - 2026-01-05
 ### Added
 - Added internal helper `grapheme_len/1` (internal) to centralize grapheme cluster length computation and avoid repetitive `string.to_graphemes |> list.length` patterns.
