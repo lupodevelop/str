@@ -395,6 +395,22 @@ pub fn wrap_at_emoji_grapheme_test() {
   assert string.contains(core.wrap_at(s, 2), "\n")
 }
 
+pub fn grapple_len_behavior_test() {
+  // Verify grapheme-aware counting on representative cases
+  assert core.length("") == 0
+  assert core.length("abc") == 3
+  // a + combining acute accent should be one grapheme
+  assert core.length("a\u{0301}") == 1
+  // Regional indicator flag (two codepoints) is a single grapheme
+  assert core.length("🇮🇹") == 1
+  // Family ZWJ sequence should be one grapheme cluster
+  assert core.length("👨‍👩‍👧‍👦") == 1
+
+  // Stress: long ASCII string should return its length
+  let long = list.fold(list.range(1, 1000), "", fn(acc, _) { acc <> "x" })
+  assert core.length(long) == 1000
+}
+
 pub fn ellipsis_basic_test() {
   let result = core.ellipsis("Hello World", 8)
   assert string.ends_with(result, "…")
@@ -541,6 +557,24 @@ pub fn ensure_prefix_absent_test() {
 
 pub fn ensure_prefix_present_test() {
   assert core.ensure_prefix("hello world", "hello ") == "hello world"
+}
+
+pub fn remove_prefix_emoji_test() {
+  assert core.remove_prefix("👨‍👩‍👧‍👦 family", "👨‍👩‍👧‍👦") == " family"
+}
+
+pub fn remove_suffix_emoji_test() {
+  assert core.remove_suffix("family 👨‍👩‍👧‍👦", "👨‍👩‍👧‍👦") == "family "
+}
+
+pub fn ensure_prefix_emoji_test() {
+  assert core.ensure_prefix("family", "👨‍👩‍👧‍👦 ") == "👨‍👩‍👧‍👦 family"
+  assert core.ensure_prefix("👨‍👩‍👧‍👦 family", "👨‍👩‍👧‍👦 ") == "👨‍👩‍👧‍👦 family"
+}
+
+pub fn ensure_suffix_emoji_test() {
+  assert core.ensure_suffix("family", " 👨‍👩‍👧‍👦") == "family 👨‍👩‍👧‍👦"
+  assert core.ensure_suffix("family 👨‍👩‍👧‍👦", " 👨‍👩‍👧‍👦") == "family 👨‍👩‍👧‍👦"
 }
 
 pub fn ensure_suffix_absent_test() {

@@ -114,6 +114,33 @@ pub fn main() {
 | `replace_first(text, old, new)` | `"aaa", "a", "b"` | `"baa"` |
 | `replace_last(text, old, new)` | `"aaa", "a", "b"` | `"aab"` |
 
+### ⚠️ Experimental: Search Strategies
+
+**Algorithms:**
+- **KMP**: optimized for long/repetitive patterns
+- **Sliding**: fast for short patterns, zero allocations
+
+**APIs:**
+
+| Function | Description |
+|----------|-------------|
+| `index_of_auto(text, pattern)` | Auto-select algorithm (heuristic) |
+| `index_of_strategy(text, pattern, Kmp\|Sliding)` | Explicit algorithm choice |
+| `count_auto(text, pattern, overlapping)` | Auto-select for counting |
+| `count_strategy(text, pattern, overlapping, Kmp\|Sliding)` | Explicit count algorithm |
+
+**Examples:**
+
+```gleam
+// Force KMP explicitly
+core.index_of_strategy("long text...", "pattern", core.Kmp)
+
+// Let heuristic decide (experimental)
+core.index_of_auto("some text", "pat")
+```
+
+> **Note:** `_auto` variants use heuristics and may not always choose optimally. For performance-critical code, use `_strategy` variants. Configure thresholds in `src/str/config.gleam`.
+
 ### 🧩 Splitting & Partitioning
 
 | Function | Example | Result |
