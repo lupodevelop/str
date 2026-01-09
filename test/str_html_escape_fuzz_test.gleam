@@ -1,7 +1,7 @@
-import gleeunit
-import str
 import gleam/list
 import gleam/string
+import gleeunit
+import str
 
 pub fn main() -> Nil {
   gleeunit.main()
@@ -10,22 +10,59 @@ pub fn main() -> Nil {
 // Deterministic, simple generator over a token pool.
 fn gen_token_pool() -> List(String) {
   [
-    "a","b","c","1","2","3"," ","\n","<",">","&","\"","'",
-    "&amp;","&lt;","&gt;","&quot;","&#39;","&#x27;","&#x22;","&notanentity;",
-    "&","&amp","&#", "&#x",
-    "\u{00A0}", // NBSP
-    "Café","naïve","ø","漢","字",
-    "👩‍👩‍👧‍👦","👨‍👩‍👧","️","✈️","🏳️‍🌈",
-    "\u{0301}", // combining acute
-    "&alpha;","&beta;","&gamma;"
+    "a",
+    "b",
+    "c",
+    "1",
+    "2",
+    "3",
+    " ",
+    "\n",
+    "<",
+    ">",
+    "&",
+    "\"",
+    "'",
+    "&amp;",
+    "&lt;",
+    "&gt;",
+    "&quot;",
+    "&#39;",
+    "&#x27;",
+    "&#x22;",
+    "&notanentity;",
+    "&",
+    "&amp",
+    "&#",
+    "&#x",
+    "\u{00A0}",
+    // NBSP
+    "Café",
+    "naïve",
+    "ø",
+    "漢",
+    "字",
+    "👩‍👩‍👧‍👦",
+    "👨‍👩‍👧",
+    "️",
+    "✈️",
+    "🏳️‍🌈",
+    "\u{0301}",
+    // combining acute
+    "&alpha;",
+    "&beta;",
+    "&gamma;",
   ]
 }
 
 // Deterministic pseudo-random index using seed and i
 fn idx_for(seed: Int, i: Int, len: Int) -> Int {
   // simple LCG-ish formula; keep small to avoid large-int overhead
-  let v = seed * 1103515245 + 12345 + i
-  let v_pos = case v < 0 { True -> -v False -> v }
+  let v = seed * 1_103_515_245 + 12_345 + i
+  let v_pos = case v < 0 {
+    True -> -v
+    False -> v
+  }
   v_pos % len
 }
 
