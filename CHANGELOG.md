@@ -2,6 +2,24 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.2.3] - 2026-01-08
+### Changed
+- Replaced `escape_html` implementation with `houdini.escape` for faster,
+  allocation-friendly HTML escaping.
+- Replaced `unescape_html` with `odysseus.unescape` for comprehensive HTML
+  entity unescaping (named entities, numeric decimal and hex entities).
+- Added dependencies: `houdini`, `odysseus`.
+
+### Tests
+- Added tests for HTML escape/unescape and numeric entities (decimal and hex).
+
+Contributed by: Daniele (`lupodevelop`)
+Suggested by: Louis Pilfold (`@lpil`)
+
+Suggested by: NNB (`@NNBnh`)
+Suggested change: updated README logo pointer to use the raw.githubusercontent URL
+(pointing to the repository commit) so the logo is resolvable on Hexdocs.
+
 ## [1.2.2] - 2026-01-05
 ### Added
 - Added internal helper `grapheme_len/1` (internal) to centralize grapheme cluster length computation and avoid repetitive `string.to_graphemes |> list.length` patterns.

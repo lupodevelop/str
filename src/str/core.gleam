@@ -13,6 +13,8 @@ import gleam/dict
 import gleam/int
 import gleam/list
 import gleam/string
+import houdini
+import odysseus
 import str/config
 
 /// Detects if a grapheme cluster likely contains emoji components.
@@ -1766,12 +1768,7 @@ pub fn is_hex(text: String) -> Bool {
 ///   escape_html("Say \"hello\"") -> "Say &quot;hello&quot;"
 ///
 pub fn escape_html(text: String) -> String {
-  text
-  |> string.replace("&", "&amp;")
-  |> string.replace("<", "&lt;")
-  |> string.replace(">", "&gt;")
-  |> string.replace("\"", "&quot;")
-  |> string.replace("'", "&#39;")
+  houdini.escape(text)
 }
 
 /// Unescapes HTML entities to their character equivalents.
@@ -1781,12 +1778,7 @@ pub fn escape_html(text: String) -> String {
 ///   unescape_html("Tom &amp; Jerry") -> "Tom & Jerry"
 ///
 pub fn unescape_html(text: String) -> String {
-  text
-  |> string.replace("&#39;", "'")
-  |> string.replace("&quot;", "\"")
-  |> string.replace("&gt;", ">")
-  |> string.replace("&lt;", "<")
-  |> string.replace("&amp;", "&")
+  odysseus.unescape(text)
 }
 
 /// Escapes regex metacharacters so the string can be used as a literal pattern.
