@@ -1,6 +1,6 @@
+import gleam/list
 import gleeunit
 import str
-import gleam/list
 
 pub fn main() -> Nil {
   gleeunit.main()
@@ -36,7 +36,8 @@ pub fn malformed_and_unknown_entity_test() {
   assert str.unescape_html("This &amp is broken") == "This &amp is broken"
 
   // Unknown entity should remain unchanged
-  assert str.unescape_html("This &notanentity; remains") == "This &notanentity; remains"
+  assert str.unescape_html("This &notanentity; remains")
+    == "This &notanentity; remains"
 }
 
 pub fn combined_and_adjacent_entities_test() {
