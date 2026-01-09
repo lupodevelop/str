@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.3.0] - 2026-01-09
+### Deprecated
+- Deprecated public APIs in internal modules (`str/core`, `str/extra`, and `str/tokenize`) in
+  preparation for the upcoming 2.0.0 release. These functions have `@deprecated` annotations
+  and will be consolidated under the unified `str` module in 2.0.0. The public convenience
+  module `str.gleam` itself remains the recommended entry point and is not deprecated.
+
+### Notes
+- You may see deprecation warnings when running tests or building the project; these
+  warnings are intentional and indicate that the APIs have been marked for migration
+  to the unified `str` module in the next major release.
+
 ## [1.2.3] - 2026-01-08
 ### Changed
 - Replaced `escape_html` implementation with `houdini.escape` for faster,
