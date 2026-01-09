@@ -33,3 +33,23 @@ pub fn kmp_large_text_min_pat() -> Int {
 pub fn kmp_border_multiplier() -> Int {
   1
 }
+
+/// Controlla se usare implementazioni FFI native quando disponibili.
+/// Default: False (usa sempre pure Gleam per sicurezza/portabilità).
+/// Impostare a True per abilitare FFI Erlang/JS ottimizzate.
+pub fn use_native_ffi() -> Bool {
+  False
+}
+
+/// Controllo granulari: utile per abilitare gradualmente funzionalità native.
+pub fn native_decompose_enabled() -> Bool {
+  use_native_ffi()
+}
+
+pub fn native_translit_enabled() -> Bool {
+  use_native_ffi()
+}
+
+pub fn native_combining_marks_enabled() -> Bool {
+  use_native_ffi()
+}
