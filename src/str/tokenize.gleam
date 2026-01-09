@@ -97,6 +97,7 @@ fn rec_build(cps, clusters, current_rev, pending) -> List(String) {
 /// Example:
 ///   chars("café") -> ["c", "a", "f", "é"]
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn chars(text: String) -> List(String) {
   let cps = string.to_utf_codepoints(text)
 
@@ -107,6 +108,7 @@ pub fn chars(text: String) -> List(String) {
 ///
 ///   chars_stdlib("café") -> ["c", "a", "f", "é"]
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn chars_stdlib(text: String) -> List(String) {
   string.to_graphemes(text)
 }

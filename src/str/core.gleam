@@ -150,6 +150,7 @@ fn is_grapheme_cased(g: String) -> Bool {
 ///   words("Hello  world\n\ttest") -> ["Hello", "world", "test"]
 ///   words("   ") -> []
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn words(text: String) -> List(String) {
   // Normalize common whitespace characters to a single space, then split
   let normalized =
@@ -172,6 +173,7 @@ pub fn words(text: String) -> List(String) {
 ///   is_blank("\t\n") -> True
 ///   is_blank("  hello  ") -> False
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn is_blank(text: String) -> Bool {
   string.trim(text) == ""
 }
@@ -179,6 +181,7 @@ pub fn is_blank(text: String) -> Bool {
 /// Repeats a string n times.
 ///
 /// Internal helper for padding operations. Returns empty string if n <= 0.
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 fn repeat_str(s: String, n: Int) -> String {
   case n <= 0 {
     True -> ""
@@ -265,6 +268,7 @@ fn count_loop_with_len(
 ///   pad_left("hi", 5, " ") -> "   hi"
 ///   pad_left("hello", 3, "*") -> "hello"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn pad_left(text: String, width: Int, pad: String) -> String {
   let clusters = string.to_graphemes(text)
   let len = list.length(clusters)
@@ -281,6 +285,7 @@ pub fn pad_left(text: String, width: Int, pad: String) -> String {
 ///   pad_right("hi", 5, " ") -> "hi   "
 ///   pad_right("hello", 3, "*") -> "hello"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn pad_right(text: String, width: Int, pad: String) -> String {
   let clusters = string.to_graphemes(text)
   let len = list.length(clusters)
@@ -297,6 +302,7 @@ pub fn pad_right(text: String, width: Int, pad: String) -> String {
 ///   center("hi", 6, " ") -> "  hi  "
 ///   center("hi", 5, " ") -> " hi  "
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn center(text: String, width: Int, pad: String) -> String {
   let clusters = string.to_graphemes(text)
   let len = list.length(clusters)
@@ -316,6 +322,7 @@ pub fn center(text: String, width: Int, pad: String) -> String {
 ///   count("aaaa", "aa", False) -> 2
 ///   count("hello", "", False) -> 0
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn count(haystack: String, needle: String, overlapping: Bool) -> Int {
   let hs = string.to_graphemes(haystack)
   let nd = string.to_graphemes(needle)
@@ -336,6 +343,7 @@ pub fn count(haystack: String, needle: String, overlapping: Bool) -> Int {
 ///
 /// They are provided as opt-in helpers for benchmarking and gradual
 /// rollout; they do not replace the legacy `index_of`/`count` APIs.
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn index_of_auto(text: String, needle: String) -> Result(Int, Nil) {
   case choose_search_strategy(text, needle) {
     Sliding -> sliding_index_of(text, needle)
@@ -348,6 +356,7 @@ pub fn index_of_auto(text: String, needle: String) -> Result(Int, Nil) {
 /// chosen algorithm. For non-overlapping counts this currently defers
 /// to the legacy `count/3` implementation to guarantee identical
 /// semantics.
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn count_auto(haystack: String, needle: String, overlapping: Bool) -> Int {
   case overlapping {
     True ->
@@ -366,6 +375,7 @@ pub fn count_auto(haystack: String, needle: String, overlapping: Bool) -> Int {
 /// change. Prefer these explicit APIs when `index_of_auto` or
 /// `count_auto` produce suboptimal results — `index_of_auto` uses a
 /// heuristic and may choose a slower algorithm on some inputs.
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn index_of_strategy(
   text: String,
   needle: String,
@@ -377,6 +387,7 @@ pub fn index_of_strategy(
   }
 }
 
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn count_strategy(
   haystack: String,
   needle: String,
@@ -397,6 +408,7 @@ pub fn count_strategy(
 ///
 ///   surround("world", "Hello ", "!") -> "Hello world!"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn surround(text: String, prefix: String, suffix: String) -> String {
   prefix <> text <> suffix
 }
@@ -407,6 +419,7 @@ pub fn surround(text: String, prefix: String, suffix: String) -> String {
 ///   unwrap("Hello world!", "Hello ", "!") -> "world"
 ///   unwrap("test", "<<", ">>") -> "test"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn unwrap(text: String, prefix: String, suffix: String) -> String {
   // Grapheme-aware unwrap: only remove prefix/suffix when they align on
   // grapheme cluster boundaries.
@@ -441,6 +454,7 @@ pub fn unwrap(text: String, prefix: String, suffix: String) -> String {
 ///
 ///   truncate_with_flag("Hello World", 8, "...", True) -> "Hello..."
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn truncate_with_flag(
   text: String,
   max_len: Int,
@@ -486,6 +500,7 @@ pub fn truncate_with_flag(
 ///
 ///   truncate("Hello 👨‍👩‍👧‍👦 World", 10, "...") -> "Hello 👨‍👩‍👧‍👦..."
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn truncate(text: String, max_len: Int, suffix: String) -> String {
   truncate_with_flag(text, max_len, suffix, True)
 }
@@ -494,12 +509,14 @@ pub fn truncate(text: String, max_len: Int, suffix: String) -> String {
 ///
 ///   truncate_strict("Hi 👩‍👩‍👧‍👦", 3, "…") -> "Hi…"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn truncate_strict(text: String, max_len: Int, suffix: String) -> String {
   truncate_with_flag(text, max_len, suffix, False)
 }
 
 /// Truncates text while prioritizing complete emoji sequences.
 /// Explicit alias for the default truncate behavior.
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn truncate_preserve(text: String, max_len: Int, suffix: String) -> String {
   truncate_with_flag(text, max_len, suffix, True)
 }
@@ -508,6 +525,7 @@ pub fn truncate_preserve(text: String, max_len: Int, suffix: String) -> String {
 ///
 ///   truncate_default("Hello World", 8) -> "Hello..."
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn truncate_default(text: String, max_len: Int) -> String {
   truncate(text, max_len, "...")
 }
@@ -519,6 +537,7 @@ pub fn truncate_default(text: String, max_len: Int) -> String {
 ///   reverse("café") -> "éfac"
 ///   reverse("👨‍👩‍👧‍👦") -> "👨‍👩‍👧‍👦"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn reverse(text: String) -> String {
   text
   |> string.to_graphemes
@@ -536,6 +555,7 @@ pub fn reverse(text: String) -> String {
 ///   take("👨‍👩‍👧‍👦abc", 2) -> "👨‍👩‍👧‍👦a"
 ///   take("hi", 10) -> "hi"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn take(text: String, n: Int) -> String {
   case n <= 0 {
     True -> ""
@@ -548,6 +568,7 @@ pub fn take(text: String, n: Int) -> String {
 }
 
 /// Returns the number of grapheme clusters in `text`.
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn length(text: String) -> Int {
   grapheme_len(text)
 }
@@ -558,6 +579,7 @@ pub fn length(text: String) -> Int {
 ///   drop("👨‍👩‍👧‍👦abc", 1) -> "abc"
 ///   drop("hi", 10) -> ""
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn drop(text: String, n: Int) -> String {
   case n <= 0 {
     True -> text
@@ -575,6 +597,7 @@ pub fn drop(text: String, n: Int) -> String {
 ///   at("👨‍👩‍👧‍👦abc", 0) -> Ok("👨‍👩‍👧‍👦")
 ///   at("hi", 10) -> Error(Nil)
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn at(text: String, index: Int) -> Result(String, Nil) {
   case index < 0 {
     True -> Error(Nil)
@@ -594,6 +617,7 @@ pub fn at(text: String, index: Int) -> Result(String, Nil) {
 ///   take_right("👨‍👩‍👧‍👦abc", 2) -> "bc"
 ///   take_right("hi", 10) -> "hi"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn take_right(text: String, n: Int) -> String {
   case n <= 0 {
     True -> ""
@@ -617,6 +641,7 @@ pub fn take_right(text: String, n: Int) -> String {
 ///   drop_right("👨‍👩‍👧‍👦abc", 2) -> "👨‍👩‍👧‍👦a"
 ///   drop_right("hi", 10) -> ""
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn drop_right(text: String, n: Int) -> String {
   case n <= 0 {
     True -> text
@@ -642,6 +667,7 @@ pub fn drop_right(text: String, n: Int) -> String {
 ///   chunk("👨‍👩‍👧‍👦abc", 2) -> ["👨‍👩‍👧‍👦a", "bc"]
 ///   chunk("hi", 10) -> ["hi"]
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn chunk(text: String, size: Int) -> List(String) {
   case size <= 0 {
     True -> []
@@ -675,6 +701,7 @@ fn chunk_loop(chars: List(String), size: Int, acc: List(String)) -> List(String)
 ///   lines("hello") -> ["hello"]
 ///   lines("a\r\nb") -> ["a", "b"]
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn lines(text: String) -> List(String) {
   text
   |> string.replace("\r\n", "\n")
@@ -688,6 +715,7 @@ pub fn lines(text: String) -> List(String) {
 ///   dedent("  a\n  b\n  c") -> "a\nb\nc"
 ///   dedent("    hello\n    world") -> "hello\nworld"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn dedent(text: String) -> String {
   let text_lines = lines(text)
 
@@ -739,6 +767,7 @@ fn count_leading_spaces_loop(chars: List(String), acc: Int) -> Int {
 ///   indent("hello\nworld", 2) -> "  hello\n  world"
 ///   indent("hi", 4) -> "    hi"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn indent(text: String, spaces: Int) -> String {
   let prefix = repeat_str(" ", spaces)
   text
@@ -755,6 +784,7 @@ pub fn indent(text: String, spaces: Int) -> String {
 ///
 ///   wrap_at("hello world foo bar", 10) -> "hello\nworld foo\nbar"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn wrap_at(text: String, width: Int) -> String {
   case width <= 0 {
     True -> text
@@ -803,6 +833,7 @@ fn wrap_words(
 ///
 ///   ellipsis("Hello World", 8) -> "Hello W…"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn ellipsis(text: String, max_len: Int) -> String {
   truncate(text, max_len, "…")
 }
@@ -816,6 +847,7 @@ pub fn ellipsis(text: String, max_len: Int) -> String {
 ///   strip("..hello..", ".") -> "hello"
 ///   strip("xxhelloxx", "x") -> "hello"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn strip(text: String, chars: String) -> String {
   let char_set = string.to_graphemes(chars)
   text
@@ -849,6 +881,7 @@ fn strip_trailing(chars: List(String), to_remove: List(String)) -> List(String) 
 ///   squeeze("mississippi", "s") -> "misisippi"
 ///   squeeze("   hello   world   ", " ") -> " hello world "
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn squeeze(text: String, char: String) -> String {
   let chars = string.to_graphemes(text)
   squeeze_loop(chars, char, False, [])
@@ -886,6 +919,7 @@ fn squeeze_loop(
 ///   chomp("hello\r\n") -> "hello"
 ///   chomp("hello") -> "hello"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn chomp(text: String) -> String {
   let chars = string.to_graphemes(text)
   let len = list.length(chars)
@@ -925,6 +959,7 @@ pub fn chomp(text: String) -> String {
 ///   normalize_whitespace("  foo  bar  baz  ") -> "foo bar baz"
 ///   normalize_whitespace("a\t\nb") -> "a b"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn normalize_whitespace(text: String) -> String {
   text
   |> words
@@ -940,6 +975,7 @@ pub fn normalize_whitespace(text: String) -> String {
 ///   partition("a-b-c", "-") -> #("a", "-", "b-c")
 ///   partition("hello", "-") -> #("hello", "", "")
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn partition(text: String, sep: String) -> #(String, String, String) {
   case string.split_once(text, sep) {
     Ok(#(before, after)) -> #(before, sep, after)
@@ -955,6 +991,7 @@ pub fn partition(text: String, sep: String) -> #(String, String, String) {
 ///   rpartition("hello", "-") -> #("", "", "hello")
 ///   rpartition("one::two::three", "::") -> #("one::two", "::", "three")
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn rpartition(text: String, sep: String) -> #(String, String, String) {
   case last_index_of(text, sep) {
     Error(_) -> #("", "", text)
@@ -975,6 +1012,7 @@ pub fn rpartition(text: String, sep: String) -> #(String, String, String) {
 ///   splitn("hello", "-", 5) -> ["hello"]
 ///   splitn("a-b-c", "-", 0) -> []
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn splitn(text: String, sep: String, n: Int) -> List(String) {
   case n <= 0 {
     True -> []
@@ -1005,6 +1043,7 @@ fn splitn_loop(
 ///   common_prefix(["hello", "world"]) -> ""
 ///   common_prefix([]) -> ""
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn common_prefix(strings: List(String)) -> String {
   case strings {
     [] -> ""
@@ -1051,6 +1090,7 @@ fn find_common_prefix(
 ///   common_suffix(["abc", "xbc", "zbc"]) -> "bc"
 ///   common_suffix(["hello", "world"]) -> ""
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn common_suffix(strings: List(String)) -> String {
   case strings {
     [] -> ""
@@ -1075,6 +1115,7 @@ pub fn common_suffix(strings: List(String)) -> String {
 ///   is_numeric("123.45") -> False
 ///   is_numeric("") -> False
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn is_numeric(text: String) -> Bool {
   case string.is_empty(text) {
     True -> False
@@ -1100,6 +1141,7 @@ pub fn is_numeric(text: String) -> Bool {
 ///   is_alpha("hello123") -> False
 ///   is_alpha("") -> False
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn is_alpha(text: String) -> Bool {
   case string.is_empty(text) {
     True -> False
@@ -1124,6 +1166,7 @@ pub fn is_alpha(text: String) -> Bool {
 ///   is_alphanumeric("hello-world") -> False
 ///   is_alphanumeric("") -> False
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn is_alphanumeric(text: String) -> Bool {
   case string.is_empty(text) {
     True -> False
@@ -1153,6 +1196,7 @@ pub fn is_alphanumeric(text: String) -> Bool {
 ///   remove_prefix("hello world", "hello ") -> "world"
 ///   remove_prefix("hello", "bye") -> "hello"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn remove_prefix(text: String, prefix: String) -> String {
   case starts_with(text, prefix) {
     True -> drop(text, grapheme_len(prefix))
@@ -1165,6 +1209,7 @@ pub fn remove_prefix(text: String, prefix: String) -> String {
 ///   remove_suffix("hello world", " world") -> "hello"
 ///   remove_suffix("hello", "bye") -> "hello"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn remove_suffix(text: String, suffix: String) -> String {
   case ends_with(text, suffix) {
     True -> drop_right(text, grapheme_len(suffix))
@@ -1177,6 +1222,7 @@ pub fn remove_suffix(text: String, suffix: String) -> String {
 ///   ensure_prefix("world", "hello ") -> "hello world"
 ///   ensure_prefix("hello world", "hello ") -> "hello world"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn ensure_prefix(text: String, prefix: String) -> String {
   case starts_with(text, prefix) {
     True -> text
@@ -1189,6 +1235,7 @@ pub fn ensure_prefix(text: String, prefix: String) -> String {
 ///   ensure_suffix("hello", " world") -> "hello world"
 ///   ensure_suffix("hello world", " world") -> "hello world"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn ensure_suffix(text: String, suffix: String) -> String {
   case ends_with(text, suffix) {
     True -> text
@@ -1202,6 +1249,7 @@ pub fn ensure_suffix(text: String, suffix: String) -> String {
 ///   starts_with_any("hello", ["bye", "world"]) -> False
 ///   starts_with_any("test", []) -> False
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn starts_with_any(text: String, prefixes: List(String)) -> Bool {
   list.any(prefixes, fn(prefix) { string.starts_with(text, prefix) })
 }
@@ -1212,6 +1260,7 @@ pub fn starts_with_any(text: String, prefixes: List(String)) -> Bool {
 ///   ends_with_any("hello", ["bye", "world"]) -> False
 ///   ends_with_any("test", []) -> False
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn ends_with_any(text: String, suffixes: List(String)) -> Bool {
   list.any(suffixes, fn(suffix) { string.ends_with(text, suffix) })
 }
@@ -1225,6 +1274,7 @@ pub fn ends_with_any(text: String, suffixes: List(String)) -> Bool {
 ///   swapcase("Hello World") -> "hELLO wORLD"
 ///   swapcase("ABC") -> "abc"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn swapcase(text: String) -> String {
   text
   |> string.to_graphemes
@@ -1254,6 +1304,7 @@ pub fn swapcase(text: String) -> String {
 ///   capitalize("") -> ""
 ///   capitalize("👋 hello") -> "👋 hello"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn capitalize(text: String) -> String {
   case string.to_graphemes(text) {
     [] -> ""
@@ -1268,6 +1319,7 @@ pub fn capitalize(text: String) -> String {
 ///   reverse_words("one two three") -> "three two one"
 ///   reverse_words("single") -> "single"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn reverse_words(text: String) -> String {
   text
   |> words
@@ -1282,6 +1334,7 @@ pub fn reverse_words(text: String) -> String {
 ///   initials("hello") -> "H"
 ///   initials("") -> ""
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn initials(text: String) -> String {
   text
   |> words
@@ -1306,6 +1359,7 @@ pub fn initials(text: String) -> String {
 ///   distance("hello", "hello") -> 0
 ///   distance("", "abc") -> 3
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn distance(a: String, b: String) -> Int {
   let a_chars = string.to_graphemes(a)
   let b_chars = string.to_graphemes(b)
@@ -1398,6 +1452,7 @@ fn min3(a: Int, b: Int, c: Int) -> Int {
 ///   index_of("hello", "x") -> Error(Nil)
 ///   index_of("👨‍👩‍👧‍👦 family", "family") -> Ok(2)
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn index_of(text: String, needle: String) -> Result(Int, Nil) {
   let text_chars = string.to_graphemes(text)
   let needle_chars = string.to_graphemes(needle)
@@ -1441,6 +1496,7 @@ fn index_of_loop(
 ///   last_index_of("hello", "x") -> Error(Nil)
 ///   last_index_of("a-b-c", "-") -> Ok(3)
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn last_index_of(text: String, needle: String) -> Result(Int, Nil) {
   let text_chars = string.to_graphemes(text)
   let needle_chars = string.to_graphemes(needle)
@@ -1496,6 +1552,7 @@ fn last_index_of_loop(
 ///   contains_any("test", []) -> False
 ///   contains_any("👨‍👩‍👧‍👦 family", ["👨‍👩‍👧‍👦", "test"]) -> True
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn contains_any(text: String, needles: List(String)) -> Bool {
   list.any(needles, fn(needle) { contains(text, needle) })
 }
@@ -1508,6 +1565,7 @@ pub fn contains_any(text: String, needles: List(String)) -> Bool {
 ///   contains_all("test", []) -> True
 ///   contains_all("👨‍👩‍👧‍👦 family", ["👨‍👩‍👧‍👦", "family"]) -> True
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn contains_all(text: String, needles: List(String)) -> Bool {
   list.all(needles, fn(needle) { contains(text, needle) })
 }
@@ -1517,6 +1575,7 @@ pub fn contains_all(text: String, needles: List(String)) -> Bool {
 ///   contains("hello world", "world") -> True
 ///   contains("hello", "x") -> False
 ///   contains("", "") -> False
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn contains(text: String, needle: String) -> Bool {
   case index_of(text, needle) {
     Ok(_) -> True
@@ -1529,6 +1588,7 @@ pub fn contains(text: String, needle: String) -> Bool {
 ///   starts_with("hello", "he") -> True
 ///   starts_with("hello", "") -> True
 ///   starts_with("hi", "hello") -> False
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn starts_with(text: String, prefix: String) -> Bool {
   let t = string.to_graphemes(text)
   let p = string.to_graphemes(prefix)
@@ -1548,6 +1608,7 @@ pub fn starts_with(text: String, prefix: String) -> Bool {
 ///   ends_with("hello.txt", ".txt") -> True
 ///   ends_with("hello", "") -> True
 ///   ends_with("hi", "hello") -> False
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn ends_with(text: String, suffix: String) -> Bool {
   let t = string.to_graphemes(text)
   let s = string.to_graphemes(suffix)
@@ -1567,6 +1628,7 @@ pub fn ends_with(text: String, suffix: String) -> Bool {
 ///
 ///   is_empty("") -> True
 ///   is_empty(" ") -> False
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn is_empty(text: String) -> Bool {
   text == ""
 }
@@ -1581,6 +1643,7 @@ pub fn is_empty(text: String) -> Bool {
 ///   replace_first("aaa", "a", "b") -> "baa"
 ///   replace_first("test", "x", "y") -> "test"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn replace_first(text: String, old: String, new: String) -> String {
   case string.split_once(text, old) {
     Ok(#(before, after)) -> before <> new <> after
@@ -1594,6 +1657,7 @@ pub fn replace_first(text: String, old: String, new: String) -> String {
 ///   replace_last("aaa", "a", "b") -> "aab"
 ///   replace_last("test", "x", "y") -> "test"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn replace_last(text: String, old: String, new: String) -> String {
   case last_index_of(text, old) {
     Error(_) -> text
@@ -1618,6 +1682,7 @@ pub fn replace_last(text: String, old: String, new: String) -> String {
 ///   is_uppercase("123") -> False
 ///   is_uppercase("") -> False
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn is_uppercase(text: String) -> Bool {
   let chars = string.to_graphemes(text)
   let cased_chars = list.filter(chars, is_grapheme_cased)
@@ -1637,6 +1702,7 @@ pub fn is_uppercase(text: String) -> Bool {
 ///   is_lowercase("123") -> False
 ///   is_lowercase("") -> False
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn is_lowercase(text: String) -> Bool {
   let chars = string.to_graphemes(text)
   let cased_chars = list.filter(chars, is_grapheme_cased)
@@ -1655,6 +1721,7 @@ pub fn is_lowercase(text: String) -> Bool {
 ///   is_title_case("Hello") -> True
 ///   is_title_case("") -> False
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn is_title_case(text: String) -> Bool {
   let text_words = words(text)
   let cased_words =
@@ -1694,6 +1761,7 @@ pub fn is_title_case(text: String) -> Bool {
 ///   is_ascii("👋") -> False
 ///   is_ascii("") -> True
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn is_ascii(text: String) -> Bool {
   text
   |> string.to_graphemes
@@ -1715,6 +1783,7 @@ pub fn is_ascii(text: String) -> Bool {
 ///   is_printable("hello\t") -> False
 ///   is_printable("") -> True
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn is_printable(text: String) -> Bool {
   text
   |> string.to_graphemes
@@ -1736,6 +1805,7 @@ pub fn is_printable(text: String) -> Bool {
 ///   is_hex("xyz") -> False
 ///   is_hex("") -> False
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn is_hex(text: String) -> Bool {
   case string.is_empty(text) {
     True -> False
@@ -1767,6 +1837,7 @@ pub fn is_hex(text: String) -> Bool {
 ///   escape_html("Tom & Jerry") -> "Tom &amp; Jerry"
 ///   escape_html("Say \"hello\"") -> "Say &quot;hello&quot;"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn escape_html(text: String) -> String {
   houdini.escape(text)
 }
@@ -1777,6 +1848,7 @@ pub fn escape_html(text: String) -> String {
 ///   unescape_html("&lt;div&gt;") -> "<div>"
 ///   unescape_html("Tom &amp; Jerry") -> "Tom & Jerry"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn unescape_html(text: String) -> String {
   odysseus.unescape(text)
 }
@@ -1788,6 +1860,7 @@ pub fn unescape_html(text: String) -> String {
 ///   escape_regex("[test]") -> "\\[test\\]"
 ///   escape_regex("a+b*c?") -> "a\\+b\\*c\\?"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn escape_regex(text: String) -> String {
   text
   |> string.replace("\\", "\\\\")
@@ -1818,6 +1891,7 @@ pub fn escape_regex(text: String) -> String {
 ///   similarity("abc", "xyz") -> 0.0
 ///   similarity("", "") -> 1.0
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn similarity(a: String, b: String) -> Float {
   let a_len = grapheme_len(a)
   let b_len = grapheme_len(b)
@@ -1844,6 +1918,7 @@ pub fn similarity(a: String, b: String) -> Float {
 ///   hamming_distance("hello", "hallo") -> Ok(1)
 ///   hamming_distance("abc", "ab") -> Error(Nil)
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn hamming_distance(a: String, b: String) -> Result(Int, Nil) {
   let a_chars = string.to_graphemes(a)
   let b_chars = string.to_graphemes(b)
@@ -1883,6 +1958,7 @@ pub type FillPosition {
 ///   fill("hi", 6, "*", Right) -> "hi****"
 ///   fill("x", 5, "-", Both) -> "--x--"
 ///
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn fill(
   text: String,
   width: Int,
@@ -2130,10 +2206,12 @@ fn kmp_fallback_j(
 }
 
 /// Public wrappers accepting `String` inputs for easier testing.
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn build_prefix_table(pattern: String) -> List(Int) {
   build_prefix_table_list(string.to_graphemes(pattern))
 }
 
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn kmp_search_all(text: String, pattern: String) -> List(Int) {
   kmp_search_all_list(string.to_graphemes(text), string.to_graphemes(pattern))
 }
@@ -2142,6 +2220,7 @@ pub fn kmp_search_all(text: String, pattern: String) -> List(Int) {
 /// searches. Returns a tuple `#(pmap, pimap)` where:
 /// - `pmap` is a `Dict(Int, String)` mapping index -> pattern grapheme
 /// - `pimap` is a `Dict(Int, Int)` mapping index -> prefix table value
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn build_kmp_maps(
   pattern: String,
 ) -> #(dict.Dict(Int, String), dict.Dict(Int, Int)) {
@@ -2156,6 +2235,7 @@ pub fn build_kmp_maps(
 
 /// KMP search using precomputed `pmap` and `pimap`. Useful when the same
 /// pattern is searched against many texts to avoid rebuilding maps repeatedly.
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn kmp_search_all_with_maps(
   text: String,
   pmap: dict.Dict(Int, String),
@@ -2259,6 +2339,7 @@ fn sliding_search_all_list(
   }
 }
 
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn sliding_search_all(text: String, pattern: String) -> List(Int) {
   sliding_search_all_list(
     string.to_graphemes(text),
@@ -2307,6 +2388,7 @@ fn sliding_index_loop(
   }
 }
 
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn sliding_index_of(text: String, pattern: String) -> Result(Int, Nil) {
   sliding_index_of_list(string.to_graphemes(text), string.to_graphemes(pattern))
 }
@@ -2376,12 +2458,14 @@ fn kmp_index_loop(
   }
 }
 
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn kmp_index_of(text: String, pattern: String) -> Result(Int, Nil) {
   kmp_index_of_list(string.to_graphemes(text), string.to_graphemes(pattern))
 }
 
 /// KMP index search using precomputed `pmap` and `pimap`. Useful for repeated
 /// searches with the same pattern.
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn kmp_index_of_with_maps(
   text: String,
   pattern: String,
@@ -2470,6 +2554,7 @@ fn choose_search_strategy_list(
   }
 }
 
+@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn choose_search_strategy(text: String, pattern: String) -> SearchStrategy {
   choose_search_strategy_list(
     string.to_graphemes(text),
