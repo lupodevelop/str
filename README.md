@@ -31,8 +31,8 @@
 | 📏 **Similarity** | Levenshtein `distance`, percentage `similarity`, `hamming_distance` |
 | 🧩 **Splitting** | `splitn`, `partition`, `rpartition`, `chunk`, `lines`, `words` |
 | 📐 **Padding** | `pad_left`, `pad_right`, `center`, `fill` |
-| � **Display Width** | Terminal column counting, CJK/emoji-aware truncation and padding for CLI/TUI |
-| �🚀 **Zero Dependencies** | Pure Gleam implementation with no OTP requirement |
+| 💻 **Display Width** | Terminal column counting, CJK/emoji-aware truncation and padding for CLI/TUI |
+| 🚀 **Zero Dependencies** | Pure Gleam implementation with no OTP requirement |
 
 ---
 
