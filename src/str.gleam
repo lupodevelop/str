@@ -253,6 +253,12 @@ pub fn index_of(text: String, needle: String) -> Result(Int, Nil) {
   core.index_of(text, needle)
 }
 
+/// Simple (direct) index algorithm — stable, straightforward implementation.
+/// Use `index_of_auto` for heuristic/optimized selection.
+pub fn index_of_simple(text: String, needle: String) -> Result(Int, Nil) {
+  core.index_of(text, needle)
+}
+
 /// Finds the index of the last occurrence of needle.
 pub fn last_index_of(text: String, needle: String) -> Result(Int, Nil) {
   core.last_index_of(text, needle)
@@ -300,6 +306,12 @@ pub fn ends_with_any(text: String, suffixes: List(String)) -> Bool {
 
 /// Counts occurrences of needle in haystack.
 pub fn count(haystack: String, needle: String, overlapping: Bool) -> Int {
+  core.count(haystack, needle, overlapping)
+}
+
+/// Simple (direct) count algorithm — stable, straightforward implementation.
+/// Use `count_auto` for heuristic/optimized selection.
+pub fn count_simple(haystack: String, needle: String, overlapping: Bool) -> Int {
   core.count(haystack, needle, overlapping)
 }
 
