@@ -1,6 +1,5 @@
 import str
 import gleam/list
-// removed unused import
 
 pub fn smart_search_default_test() {
   assert str.smart_search_enabled() == False
