@@ -31,7 +31,8 @@
 | 📏 **Similarity** | Levenshtein `distance`, percentage `similarity`, `hamming_distance` |
 | 🧩 **Splitting** | `splitn`, `partition`, `rpartition`, `chunk`, `lines`, `words` |
 | 📐 **Padding** | `pad_left`, `pad_right`, `center`, `fill` |
-| 🚀 **Zero Dependencies** | Pure Gleam implementation with no OTP requirement |
+| � **Display Width** | Terminal column counting, CJK/emoji-aware truncation and padding for CLI/TUI |
+| �🚀 **Zero Dependencies** | Pure Gleam implementation with no OTP requirement |
 
 ---
 
@@ -160,6 +161,39 @@ core.index_of_auto("some text", "pat")
 | `center(text, width, pad)` | `"hi", 6, "-"` | `"--hi--"` |
 | `fill(text, width, pad, pos)` | `"x", 5, "-", "both"` | `"--x--"` |
 
+### 📺 Display Width (CLI/TUI)
+
+Functions for terminal column width calculations, respecting emoji, CJK, and combining marks.
+
+| Function | Description |
+|----------|-------------|
+| `display_width(text, ambiguous_as)` | Count visual columns (emoji=2, CJK=2, combining=0) |
+| `truncate_display(text, width, suffix, ambiguous_as)` | Truncate to column width without breaking emoji |
+| `pad_display(text, width, side, pad, ambiguous_as)` | Pad to target column width (left/right/center) |
+
+```gleam
+import str/display_width
+
+// CJK characters are 2 columns wide
+display_width.display_width("漢字", 1)  // → 4
+
+// Emoji (ZWJ sequences) count as 2 columns
+display_width.display_width("👩‍👩‍👧‍👦", 1)  // → 2
+
+// Combining marks don't add width
+display_width.display_width("e\u{0301}", 1)  // → 1 (é as e + combining accent)
+
+// Truncate preserving emoji sequences
+display_width.truncate_display("Hello 👩‍👩‍👧‍👦 World", 10, "...", 1)
+// → "Hello ..."  (doesn't split the family emoji)
+
+// Pad to exact column width
+display_width.pad_display("Hi", 10, "center", "-", 1)
+// → "----Hi----"
+```
+
+> **Note:** `ambiguous_as` controls the width of ambiguous-width characters (e.g., ±, ©). Use `1` for most Western terminals, `2` for CJK-locale terminals.
+
 ### ✅ Validation
 
 | Function | Description |
@@ -268,6 +302,7 @@ extra.slugify_opts("Hello World", 0, "_", False)   // → "hello_world"
 | **`str`** | Most common operations | `import str` |
 | **`str/core`** | Full grapheme-aware API, advanced features | `import str/core` |
 | **`str/extra`** | ASCII folding, slugs, case conversions | `import str/extra` |
+| **`str/display_width`** | Terminal column width, CLI/TUI alignment | `import str/display_width` |
 | **`str/tokenize`** | Reference implementation (pedagogic only) | `import str/tokenize` |
 
 **Quick start:** Use `import str` for everyday needs. The main `str` module re-exports commonly used functions from `core` and `extra`.

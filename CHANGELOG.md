@@ -2,6 +2,24 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.3.0] - 2026-01-10
+### Added
+- **Display Width module** (`str/display_width`): Unicode-aware terminal column width calculations for CLI/TUI applications.
+  - `display_width(text, ambiguous_as)`: Count visual columns (emoji=2, CJK=2, combining=0)
+  - `truncate_display(text, width, suffix, ambiguous_as)`: Truncate to column width without breaking emoji/ZWJ sequences
+  - `pad_display(text, width, side, pad, ambiguous_as)`: Pad to target column width (left/right/center)
+- **Generator script** (`scripts/generate_display_width_tables.py`): Downloads Unicode 15.1.0 UCD (EastAsianWidth.txt, UnicodeData.txt) and generates type-safe Gleam lookup tables.
+- **Internal module** (`str/internal_display_width`): Auto-generated width tables with 299 width ranges and 343 combining mark ranges.
+
+### Changed
+- Display width functions use pure Gleam with no NIF/FFI dependencies.
+- Width lookup reimplemented as a generated binary-search decision tree for improved lookup performance 
+
+### Documentation
+- Updated README with display width examples and module guide.
+
+Contributed by: Daniele (`lupodevelop`)
+
 ## [1.2.3] - 2026-01-08
 ### Changed
 - Replaced `escape_html` implementation with `houdini.escape` for faster,
