@@ -1,12 +1,12 @@
 import gleam/string
-import str/extra
+import str
 
 pub fn ascii_fold_with_normalizer_identity_test() {
   // Passing the identity function should produce the same result as the
   // existing `ascii_fold` path.
   let s = "Crème"
-  let res1 = extra.ascii_fold_with_normalizer(s, fn(x) { x })
-  let res2 = extra.ascii_fold(s)
+  let res1 = str.ascii_fold_with_normalizer(s, fn(x) { x })
+  let res2 = str.ascii_fold(s)
   assert res1 == res2
 }
 
@@ -17,6 +17,6 @@ pub fn slugify_opts_with_normalizer_fake_nfd_test() {
   let fake_nfd = fn(x) { string.replace(x, "é", "e\u{0301}") }
 
   let s = "Café ❤️"
-  let slug = extra.slugify_opts_with_normalizer(s, 0, "-", False, fake_nfd)
+  let slug = str.slugify_opts_with_normalizer(s, 0, "-", False, fake_nfd)
   assert slug == "cafe"
 }
