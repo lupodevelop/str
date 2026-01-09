@@ -30,36 +30,36 @@ import str/config
 ///
 /// Note: This is not a complete UAX #29 implementation but handles
 /// common cases efficiently.
+fn is_emoji_code(code: Int) -> Bool {
+  case code {
+    0x200D | 0xFE0F | 0x20E3 -> True
+    _ -> False
+  }
+}
+
+fn is_in_emoji_range(code: Int) -> Bool {
+  // Check broad, common ranges first for early exit
+  case
+    code >= 0x1F000 && code <= 0x1FAFF
+    || code >= 0x1F3FB && code <= 0x1F3FF
+    || code >= 0x1F1E6 && code <= 0x1F1FF
+    || code >= 0xE0020 && code <= 0xE007F
+  {
+    True -> True
+    False -> False
+  }
+}
+
 fn cluster_has_emoji(cluster: String) -> Bool {
-  // Heuristic detection for emoji-like clusters. Not full Unicode UAX29,
-  // but covers common cases: ZWJ sequences, variation selectors, skin tones,
-  // regional indicators (flags), keycap sequences, tag characters and a wide
-  // pictographic range.
+  // Heuristic detection for emoji-like clusters. Flat checks for clarity and
+  // easier maintenance; covers common cases (ZWJ, VS, skin tones, flags,
+  // tag characters, pictographic ranges).
   let cps = string.to_utf_codepoints(cluster)
   list.any(cps, fn(cp) {
     let code = string.utf_codepoint_to_int(cp)
-    // Quick checks for single codepoints that indicate emoji composition
-    case code == 0x200D || code == 0xFE0F || code == 0x20E3 {
+    case is_emoji_code(code) {
       True -> True
-      False ->
-        case code >= 0x1F3FB && code <= 0x1F3FF {
-          True -> True
-          False ->
-            case code >= 0x1F1E6 && code <= 0x1F1FF {
-              True -> True
-              False ->
-                case code >= 0xE0020 && code <= 0xE007F {
-                  // Tag characters (emoji tag sequences)
-                  True -> True
-                  False ->
-                    // Broad pictographic/emoji blocks (approximation)
-                    case code >= 0x1F000 && code <= 0x1FAFF {
-                      True -> True
-                      False -> False
-                    }
-                }
-            }
-        }
+      False -> is_in_emoji_range(code)
     }
   })
 }
