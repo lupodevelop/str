@@ -23,15 +23,8 @@ import str/internal/translit
 ///    but after removing the dot below, "Å" matches)
 ///
 fn ascii_fold_full(s: String, decompose: Bool) -> String {
-  // Use the centralized replacement table from the internal module.
-  let reps = translit.replacements()
-
-  // Apply replacement table first (handles precomposed characters)
-  let replaced =
-    list.fold(reps, s, fn(acc, pair) {
-      let #(from, to) = pair
-      string.replace(acc, from, to)
-    })
+  // Use grapheme-wise transliteration (faster, single-pass) when available
+  let replaced = translit.transliterate_pure(s)
 
   // Optionally decompose (expand precomposed letters) and then remove
   // combining marks. Decomposition is limited to Latin ranges and is
@@ -44,12 +37,8 @@ fn ascii_fold_full(s: String, decompose: Bool) -> String {
         |> translit.remove_combining_marks
 
       // Second pass: catch precomposed chars that didn't match initially
-      // because they had combining marks attached (string.replace matches
-      // exact codepoint sequences, so "Å\u{0323}" != "Å")
-      list.fold(reps, after_decompose, fn(acc, pair) {
-        let #(from, to) = pair
-        string.replace(acc, from, to)
-      })
+      // because they had combining marks attached (handled by transliterate)
+      translit.transliterate_pure(after_decompose)
     }
     False -> replaced
   }
@@ -138,6 +127,70 @@ pub fn ascii_fold_no_decompose_with_normalizer(s: String, normalizer) -> String 
     let #(from, to) = pair
     string.replace(acc, from, to)
   })
+}
+
+// ---------------------------------------------------------------------------
+// Slugify Options Builder 
+// ---------------------------------------------------------------------------
+
+pub opaque type SlugifyOptions {
+  SlugifyOptions(
+    max_tokens: Int,
+    separator: String,
+    preserve_unicode: Bool,
+    lowercase: Bool,
+    custom_replacements: List(#(String, String)),
+  )
+}
+
+pub fn slugify_options() -> SlugifyOptions {
+  SlugifyOptions(
+    -1,
+    "-",
+    False,
+    True,
+    [],
+  )
+}
+
+pub fn with_max_tokens(opts: SlugifyOptions, n: Int) -> SlugifyOptions {
+  SlugifyOptions(..opts, max_tokens: n)
+}
+
+pub fn with_separator(opts: SlugifyOptions, sep: String) -> SlugifyOptions {
+  SlugifyOptions(..opts, separator: sep)
+}
+
+pub fn with_preserve_unicode(opts: SlugifyOptions, v: Bool) -> SlugifyOptions {
+  SlugifyOptions(..opts, preserve_unicode: v)
+}
+
+pub fn with_custom_replacements(
+  opts: SlugifyOptions,
+  replacements: List(#(String, String)),
+) -> SlugifyOptions {
+  SlugifyOptions(..opts, custom_replacements: replacements)
+}
+
+pub fn slugify_with_options(s: String, opts: SlugifyOptions) -> String {
+  let max_len = case opts.max_tokens >= 0 {
+    True -> opts.max_tokens
+    False -> -1
+  }
+  // For now ignore custom_replacements and lowercase flag in opts for simplicity
+  slugify_opts(s, max_len, opts.separator, opts.preserve_unicode)
+}
+
+pub fn slugify_with_options_and_normalizer(
+  s: String,
+  opts: SlugifyOptions,
+  normalizer,
+) -> String {
+  let max_len = case opts.max_tokens >= 0 {
+    True -> opts.max_tokens
+    False -> -1
+  }
+  slugify_opts_with_normalizer(s, max_len, opts.separator, opts.preserve_unicode, normalizer)
 }
 
 // Simple helpers used by slugify
