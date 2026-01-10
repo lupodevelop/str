@@ -153,60 +153,7 @@ pub const __NAME__data_pool: List(String) = [
   __POOL__
 ]
 
-// Helper: safe indexing into lists
-fn get_at(xs: List(a), idx: Int) -> Result(a, Nil) {
-  case list.drop(xs, idx) {
-    [h, ..] -> Ok(h)
-    _ -> Error(Nil)
-  }
-}
-
-// Popcount for small words
-fn popcount(x: Int, acc: Int) -> Int {
-  case x == 0 {
-    True -> acc
-    False -> {
-      let b = x % 2
-      popcount(x / 2, acc + b)
-    }
-  }
-}
-
-// Get bit value within a word (by shifting)
-fn bit_in_word(w: Int, i: Int) -> Int {
-  case i == 0 {
-    True -> w % 2
-    False -> bit_in_word(w / 2, i - 1)
-  }
-}
-
-// Compute 2^e as Int
-fn pow2(e: Int) -> Int {
-  case e == 0 {
-    True -> 1
-    False -> 2 * pow2(e - 1)
-  }
-}
-
-// Rank: number of set bits before idx in words
-fn rank_in_masks(words: List(Int), idx: Int, word_bits: Int) -> Int {
-  let word_idx = idx / word_bits
-  let bit_idx = idx % word_bits
-
-  // Sum popcount of full words before word_idx
-  let before = list.take(words, word_idx)
-  let s = list.fold(before, 0, fn(acc, w) { acc + popcount(w, 0) })
-
-  // remainder in current word: count lower bits
-  case get_at(words, word_idx) {
-    Ok(w) -> {
-      let mask = pow2(bit_idx)
-      let lower = w % mask
-      s + popcount(lower, 0)
-    }
-    Error(_) -> s
-  }
-}
+import str/internal/bitarray_helpers as bits
 
 pub fn __NAME__lookup_by_codepoint(cp: Int) -> Result(String, Nil) {
   let page = cp / __PAGE_SIZE__
@@ -216,15 +163,15 @@ pub fn __NAME__lookup_by_codepoint(cp: Int) -> Result(String, Nil) {
         True -> Error(Nil)
         False -> {
           let idx = cp % __PAGE_SIZE__
-          let page_masks = case get_at(__NAME__page_masks, page) { Ok(m) -> m Error(_) -> [] }
+          let page_masks = case bits.get_at(__NAME__page_masks, page) { Ok(m) -> m Error(_) -> [] }
           let word_idx = idx / __WORD_BITS__
-          let word = case get_at(page_masks, word_idx) { Ok(w) -> w Error(_) -> 0 }
-          let bit = bit_in_word(word, idx % __WORD_BITS__)
+          let word = case bits.get_at(page_masks, word_idx) { Ok(w) -> w Error(_) -> 0 }
+          let bit = bits.bit_in_word(word, idx % __WORD_BITS__)
           case bit == 0 {
             True -> Error(Nil)
             False -> {
-              let rank = rank_in_masks(page_masks, idx, __WORD_BITS__)
-              let val = case get_at(__NAME__data_pool, offset + rank) { Ok(v) -> v Error(_) -> "" }
+              let rank = bits.rank_in_masks(page_masks, idx, __WORD_BITS__)
+              let val = case bits.get_at(__NAME__data_pool, offset + rank) { Ok(v) -> v Error(_) -> "" }
               Ok(val)
             }
           }
