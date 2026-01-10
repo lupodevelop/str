@@ -2,6 +2,35 @@
 
 All notable changes to this project are documented in this file.
 
+## [2.0.0] - 2026-01-10
+
+### 🚀 Breaking
+- Unified public API: prefer `import str` for the majority of use cases; many functions are now re-exported from the main module.
+- Some internal submodules are annotated with `@deprecated` to guide migration to v2.0; 
+
+### ✅ Added
+- Single entrypoint `str` with re-exports for grapheme operations, search, slugify, ascii_fold, etc.
+- `SlugifyOptions` builder and `slugify_with_options` for an extensible, safer slugify API.
+- Compact BitArray-based lookup tables (generated `generated_*_pages` modules) for transliteration and Latin decomposition.
+- `str/advanced` module exposing low-level APIs (KMP maps, explicit search) for power users.
+- Deterministic fuzz tests for HTML escaping, slugify, and search (KMP/Sliding).
+
+### 🔧 Changed
+- `translit` and `decompose` now use page-based BitArray lookups (pure Gleam): significant reduction in generated code and improved compile/runtime behavior.
+- Refactored implementation layers (`*_impl` delegating to `*_pure` / `*_native`) to allow opt-in FFI in the future.
+
+### ⚠️ Deprecated / Relocated
+- Some helper functions previously exposed from internal modules (e.g., `str/core`, `str/extra`, `str/tokenize`, `str/config`) have been **deprecated in place and/or moved**; stable equivalents are available as re-exports from the main `str` module. Prefer `import str` for the public API, importing internal modules may produce deprecation warnings or be unnecessary.
+
+### 📝 Notes
+- FFI (Erlang/JS) support is planned as a future optimization and remains disabled by default.
+- Table generation and benchmark infrastructure were added for reproducible measurements.
+
+### 🔁 Migration
+- Recommendation: update imports to `import str` and prefer the re-exported functions; direct imports of internal modules will emit deprecation warnings.
+
+Contributed by: Daniele (`lupodevelop`)
+
 ## [1.3.0] - 2026-01-09
 ### Deprecated
 - Deprecated public APIs in internal modules (`str/core`, `str/extra`, and `str/tokenize`) in
