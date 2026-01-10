@@ -1,5 +1,4 @@
 // Generated table extracted from translit_pure.gleam
-import gleam/list
 
 pub fn replacements_generated() -> List(#(String, String)) {
   [
