@@ -46,6 +46,7 @@ import str/config
 import str/internal/core
 import str/internal/extra
 import str/internal/tokenize
+import str/internal/decompose as internal_decompose
 
 // ============================================================================
 // RE-EXPORT TYPES
@@ -694,7 +695,49 @@ pub fn slugify_with_normalizer(text: String, normalizer) -> String {
   extra.slugify_with_normalizer(text, normalizer)
 }
 
-/// Creates slug with detailed options.
+/// Decompose helper (forwarded from internal)
+pub fn decompose_latin(s: String) -> String {
+  internal_decompose.decompose_latin(s)
+}
+
+/// Creates slug using `SlugifyOptions` builder.
+pub fn slugify_with_options(text: String, opts: extra.SlugifyOptions) -> String {
+  extra.slugify_with_options(text, opts)
+}
+
+pub fn slugify_with_options_and_normalizer(
+  text: String,
+  opts: extra.SlugifyOptions,
+  normalizer,
+) -> String {
+  extra.slugify_with_options_and_normalizer(text, opts, normalizer)
+}
+
+// Slugify options builder wrappers (expose via `import str`)
+pub fn slugify_options() -> extra.SlugifyOptions {
+  extra.slugify_options()
+}
+
+pub fn with_max_tokens(opts: extra.SlugifyOptions, n: Int) -> extra.SlugifyOptions {
+  extra.with_max_tokens(opts, n)
+}
+
+pub fn with_separator(opts: extra.SlugifyOptions, sep: String) -> extra.SlugifyOptions {
+  extra.with_separator(opts, sep)
+}
+
+pub fn with_preserve_unicode(opts: extra.SlugifyOptions, v: Bool) -> extra.SlugifyOptions {
+  extra.with_preserve_unicode(opts, v)
+}
+
+pub fn with_custom_replacements(
+  opts: extra.SlugifyOptions,
+  replacements: List(#(String, String)),
+) -> extra.SlugifyOptions {
+  extra.with_custom_replacements(opts, replacements)
+}
+
+/// Creates slug with detailed options (backwards-compatible API).
 pub fn slugify_opts(
   text: String,
   max_len: Int,
