@@ -42,4 +42,10 @@ tmp/
 
 ### user-specific files
 artifacts/
-benchmark/results/*
+
+### Benchmark outputs
+benchmark/results/
+benchmark/runtime/bench_beam/
+
+### Generated bench modules
+src/str/internal/generated_*_bench.gleam
