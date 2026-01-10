@@ -1,6 +1,5 @@
 import str/config
 import str/internal/decompose_pure as pure
-import str/internal/decompose_native as native
 
 // Delegating implementation layer for `decompose`.
 // At runtime this may prefer a native implementation if available.
