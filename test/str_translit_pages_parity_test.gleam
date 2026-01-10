@@ -1,7 +1,8 @@
-import gleam/expect
 import str/internal/generated_translit_pairs as gen
 import str/internal/generated_translit_pages as pages
 import str/internal/translit_pure as pure
+import gleam/list
+import gleam/string
 
 pub fn main() {
   let pairs = gen.replacements_generated()
@@ -12,8 +13,8 @@ pub fn main() {
     case string.to_graphemes(from) {
       [g] -> {
         case pages.translit_pages_lookup_by_grapheme(g) {
-          Ok(v) -> expect.equal(v, to)
-          Error(_) -> expect.fail("Missing pages entry for translit pair")
+          Ok(v) -> { assert v == to }
+          Error(_) -> { assert string.length(from) == 0 }
         }
       }
       _ -> Nil
@@ -29,5 +30,5 @@ pub fn main() {
   })
 
   let translit = pure.transliterate_pure(sample)
-  expect.equal(folded, translit)
+  assert folded == translit
 }
