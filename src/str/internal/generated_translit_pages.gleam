@@ -6,10 +6,12 @@ import gleam/string
 
 pub const translit_pages_page_offsets: List(Int) = [ 0, 62, 132 ]
 
-pub const translit_pages_page_bitlists: List(List(Int)) = [
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1],
-  [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+// Masks: each page is a list of `word_bits`-width integer words representing
+// which codepoints within the page have replacements.
+pub const translit_pages_page_masks: List(List(Int)) = [
+  [0, 0, 0, 18410715276682199039],
+  [1784481038627500287, 2165330095302967710, 0, 0],
+  [251658240, 0, 0, 0]
 ]
 
 pub const translit_pages_data_pool: List(String) = [
@@ -151,10 +153,58 @@ pub const translit_pages_data_pool: List(String) = [
   "t"
 ]
 
+// Helper: safe indexing into lists
 fn get_at(xs: List(a), idx: Int) -> Result(a, Nil) {
   case list.drop(xs, idx) {
     [h, ..] -> Ok(h)
     _ -> Error(Nil)
+  }
+}
+
+// Popcount for small words
+fn popcount(x: Int, acc: Int) -> Int {
+  case x == 0 {
+    True -> acc
+    False -> {
+      let b = x % 2
+      popcount(x / 2, acc + b)
+    }
+  }
+}
+
+// Get bit value within a word (by shifting)
+fn bit_in_word(w: Int, i: Int) -> Int {
+  case i == 0 {
+    True -> w % 2
+    False -> bit_in_word(w / 2, i - 1)
+  }
+}
+
+// Compute 2^e as Int
+fn pow2(e: Int) -> Int {
+  case e == 0 {
+    True -> 1
+    False -> 2 * pow2(e - 1)
+  }
+}
+
+// Rank: number of set bits before idx in words
+fn rank_in_masks(words: List(Int), idx: Int, word_bits: Int) -> Int {
+  let word_idx = idx / word_bits
+  let bit_idx = idx % word_bits
+
+  // Sum popcount of full words before word_idx
+  let before = list.take(words, word_idx)
+  let s = list.fold(before, 0, fn(acc, w) { acc + popcount(w, 0) })
+
+  // remainder in current word: count lower bits
+  case get_at(words, word_idx) {
+    Ok(w) -> {
+      let mask = pow2(bit_idx)
+      let lower = w % mask
+      s + popcount(lower, 0)
+    }
+    Error(_) -> s
   }
 }
 
@@ -166,13 +216,14 @@ pub fn translit_pages_lookup_by_codepoint(cp: Int) -> Result(String, Nil) {
         True -> Error(Nil)
         False -> {
           let idx = cp % 256
-          let page_bits = case get_at(translit_pages_page_bitlists, page) { Ok(b) -> b Error(_) -> [] }
-          let bit = case get_at(page_bits, idx) { Ok(v) -> v Error(_) -> 0 }
+          let page_masks = case get_at(translit_pages_page_masks, page) { Ok(m) -> m Error(_) -> [] }
+          let word_idx = idx / 64
+          let word = case get_at(page_masks, word_idx) { Ok(w) -> w Error(_) -> 0 }
+          let bit = bit_in_word(word, idx % 64)
           case bit == 0 {
             True -> Error(Nil)
             False -> {
-              let mask = list.take(page_bits, idx)
-              let rank = list.fold(mask, 0, fn(acc, b) { acc + b })
+              let rank = rank_in_masks(page_masks, idx, 64)
               let val = case get_at(translit_pages_data_pool, offset + rank) { Ok(v) -> v Error(_) -> "" }
               Ok(val)
             }

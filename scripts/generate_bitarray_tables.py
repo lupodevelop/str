@@ -67,55 +67,71 @@ def format_pairs(pairs):
     return "\n".join(lines)
 
 
-def build_pages(pairs, page_size=256):
+def build_pages(pairs, page_size=256, word_bits=64):
     # pairs: list of (cp int, replacement str)
+    # Build per-page bit-index and data pool but pack each page's bitlist into
+    # `word_bits`-width integers (a list of words per page). This yields a compact
+    # two-level structure: page offsets + page masks + data pool.
     pages = {}
-    data = []
     page_map = {}
 
     for cp, val in pairs:
         page = cp // page_size
         idx = cp % page_size
         if page not in pages:
-            pages[page] = [0] * page_size
+            pages[page] = set()
             page_map[page] = []
-        pages[page][idx] = 1
+        pages[page].add(idx)
         page_map[page].append((idx, val))
 
     # build data pool and offsets
     sorted_pages = sorted(pages.keys())
     offsets = {}
     pool = []
+    masks = {}
     for p in sorted_pages:
         offsets[p] = len(pool)
         # order entries by idx
-        for idx, val in sorted(page_map[p], key=lambda x: x[0]):
+        entries = sorted(page_map[p], key=lambda x: x[0])
+        for idx, val in entries:
             pool.append(val)
 
-    return pages, offsets, pool
+        # build compact mask words for this page
+        indices = sorted(list(pages[p]))
+        words = []
+        for base in range(0, page_size, word_bits):
+            w = 0
+            for i in indices:
+                if base <= i < base + word_bits:
+                    w |= (1 << (i - base))
+            words.append(w)
+        masks[p] = words
+
+    return masks, offsets, pool
 
 
-def render_pages_module(pairs, module, name, page_size=256):
-    pages, offsets, pool = build_pages(pairs, page_size)
-    max_page = max(pages.keys()) if pages else 0
+def render_pages_module(pairs, module, name, page_size=256, word_bits=64):
+    masks, offsets, pool = build_pages(pairs, page_size, word_bits)
+    max_page = max(masks.keys()) if masks else 0
 
     # render page offsets array of length max_page+1, -1 for empty
     page_offsets = [ -1 ] * (max_page + 1)
-    page_bitlists = []
+    page_masks = []
+    words_per_page = (page_size + word_bits - 1) // word_bits
     for p in range(max_page + 1):
-        if p in pages:
+        if p in masks:
             page_offsets[p] = offsets[p]
-            page_bitlists.append(pages[p])
+            page_masks.append(masks[p])
         else:
-            page_bitlists.append([0]*page_size)
+            page_masks.append([0]*words_per_page)
 
     # format as Gleam literals
     offsets_str = ', '.join(str(x) for x in page_offsets)
 
-    bitlists_str = []
-    for bl in page_bitlists:
-        bitlists_str.append('[{}]'.format(', '.join(str(b) for b in bl)))
-    bitlists_literal = ',\n  '.join(bitlists_str)
+    masks_str = []
+    for m in page_masks:
+        masks_str.append('[{}]'.format(', '.join(str(b) for b in m)))
+    masks_literal = ',\n  '.join(masks_str)
 
     pool_str = ',\n  '.join(f'\"{s}\"' for s in pool)
 
@@ -127,18 +143,68 @@ import gleam/string
 
 pub const __NAME__page_offsets: List(Int) = [ __OFFSETS__ ]
 
-pub const __NAME__page_bitlists: List(List(Int)) = [
-  __BITLIST__
+// Masks: each page is a list of `word_bits`-width integer words representing
+// which codepoints within the page have replacements.
+pub const __NAME__page_masks: List(List(Int)) = [
+  __MASKS__
 ]
 
 pub const __NAME__data_pool: List(String) = [
   __POOL__
 ]
 
+// Helper: safe indexing into lists
 fn get_at(xs: List(a), idx: Int) -> Result(a, Nil) {
   case list.drop(xs, idx) {
     [h, ..] -> Ok(h)
     _ -> Error(Nil)
+  }
+}
+
+// Popcount for small words
+fn popcount(x: Int, acc: Int) -> Int {
+  case x == 0 {
+    True -> acc
+    False -> {
+      let b = x % 2
+      popcount(x / 2, acc + b)
+    }
+  }
+}
+
+// Get bit value within a word (by shifting)
+fn bit_in_word(w: Int, i: Int) -> Int {
+  case i == 0 {
+    True -> w % 2
+    False -> bit_in_word(w / 2, i - 1)
+  }
+}
+
+// Compute 2^e as Int
+fn pow2(e: Int) -> Int {
+  case e == 0 {
+    True -> 1
+    False -> 2 * pow2(e - 1)
+  }
+}
+
+// Rank: number of set bits before idx in words
+fn rank_in_masks(words: List(Int), idx: Int, word_bits: Int) -> Int {
+  let word_idx = idx / word_bits
+  let bit_idx = idx % word_bits
+
+  // Sum popcount of full words before word_idx
+  let before = list.take(words, word_idx)
+  let s = list.fold(before, 0, fn(acc, w) { acc + popcount(w, 0) })
+
+  // remainder in current word: count lower bits
+  case get_at(words, word_idx) {
+    Ok(w) -> {
+      let mask = pow2(bit_idx)
+      let lower = w % mask
+      s + popcount(lower, 0)
+    }
+    Error(_) -> s
   }
 }
 
@@ -150,13 +216,14 @@ pub fn __NAME__lookup_by_codepoint(cp: Int) -> Result(String, Nil) {
         True -> Error(Nil)
         False -> {
           let idx = cp % __PAGE_SIZE__
-          let page_bits = case get_at(__NAME__page_bitlists, page) { Ok(b) -> b Error(_) -> [] }
-          let bit = case get_at(page_bits, idx) { Ok(v) -> v Error(_) -> 0 }
+          let page_masks = case get_at(__NAME__page_masks, page) { Ok(m) -> m Error(_) -> [] }
+          let word_idx = idx / __WORD_BITS__
+          let word = case get_at(page_masks, word_idx) { Ok(w) -> w Error(_) -> 0 }
+          let bit = bit_in_word(word, idx % __WORD_BITS__)
           case bit == 0 {
             True -> Error(Nil)
             False -> {
-              let mask = list.take(page_bits, idx)
-              let rank = list.fold(mask, 0, fn(acc, b) { acc + b })
+              let rank = rank_in_masks(page_masks, idx, __WORD_BITS__)
               let val = case get_at(__NAME__data_pool, offset + rank) { Ok(v) -> v Error(_) -> "" }
               Ok(val)
             }
@@ -169,9 +236,10 @@ pub fn __NAME__lookup_by_codepoint(cp: Int) -> Result(String, Nil) {
     mod = mod.replace('__MODULE__', module)
     mod = mod.replace('__NAME__', name + '_')
     mod = mod.replace('__OFFSETS__', offsets_str)
-    mod = mod.replace('__BITLIST__', bitlists_literal)
+    mod = mod.replace('__MASKS__', masks_literal)
     mod = mod.replace('__POOL__', pool_str)
     mod = mod.replace('__PAGE_SIZE__', str(page_size))
+    mod = mod.replace('__WORD_BITS__', str(word_bits))
 
     # Add a small helper to look up a single-codepoint grapheme
     grapheme_fn = """
@@ -195,6 +263,7 @@ def main():
     p.add_argument("--module", help="Gleam module name (for comments)")
     p.add_argument("--name", help="Base name for generated constants", default="translit_map")
     p.add_argument("--mode", help="Mode: table (default) or pages", default="table")
+    p.add_argument("--word-bits", help="Width of mask words (default 64)", type=int, default=64)
     args = p.parse_args()
 
     # Read pairs from existing generated_translit_pairs.gleam or CSV
@@ -218,7 +287,7 @@ def main():
 
     module = args.module or "generated_translit_table"
     if args.mode == 'pages':
-        out = render_pages_module(pairs, module, args.name)
+        out = render_pages_module(pairs, module, args.name, page_size=256, word_bits=args.word_bits)
     else:
         pairs_str = format_pairs(pairs)
         out = TEMPLATE.format(module=module, name=args.name, pairs=pairs_str)
