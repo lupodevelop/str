@@ -1,6 +1,5 @@
 import str/config
 import str/internal/translit_pure as pure
-import str/internal/translit_native as native
 
 // Delegating implementation layer for `translit`.
 // At runtime this may prefer a native implementation if available.
