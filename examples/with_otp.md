@@ -69,17 +69,12 @@ pub fn create_slug(text: String) -> String {
 
 ### Step 3: Configure Slugify Options
 
-For more control, use `slugify_opts_with_normalizer`:
+For more control, use `slugify_with_options_and_normalizer` together with the `SlugifyOptions` builder:
 
 ```gleam
 pub fn create_url_slug(text: String, max_words: Int) -> String {
-  extra.slugify_opts_with_normalizer(
-    text,
-    max_words,  // Token limit
-    "-",        // Separator
-    False,      // Convert to ASCII
-    unicode_helpers.nfd
-  )
+  let opts = extra.slugify_options() |> extra.with_max_tokens(max_words) |> extra.with_separator("-") |> extra.with_preserve_unicode(False)
+  extra.slugify_with_options_and_normalizer(text, opts, unicode_helpers.nfd)
 }
 ```
 
@@ -106,24 +101,14 @@ import unicode_helpers
 
 /// Create a URL-friendly slug from arbitrary text
 pub fn from_text(text: String) -> String {
-  extra.slugify_opts_with_normalizer(
-    text,
-    0,      // No word limit
-    "-",    // Hyphen separator
-    False,  // ASCII output only
-    unicode_helpers.nfd
-  )
+  let opts = extra.slugify_options() |> extra.with_max_tokens(0) |> extra.with_separator("-") |> extra.with_preserve_unicode(False)
+  extra.slugify_with_options_and_normalizer(text, opts, unicode_helpers.nfd)
 }
 
 /// Create a slug preserving Unicode characters
 pub fn from_text_unicode(text: String) -> String {
-  extra.slugify_opts_with_normalizer(
-    text,
-    0,
-    "-",
-    True,   // Preserve Unicode
-    unicode_helpers.nfc
-  )
+  let opts = extra.slugify_options() |> extra.with_max_tokens(0) |> extra.with_separator("-") |> extra.with_preserve_unicode(True)
+  extra.slugify_with_options_and_normalizer(text, opts, unicode_helpers.nfc)
 }
 
 // Usage:
@@ -138,7 +123,7 @@ pub fn from_text_unicode(text: String) -> String {
 - `ascii_fold_with_normalizer(text, normalizer)`
 - `ascii_fold_no_decompose_with_normalizer(text, normalizer)`
 - `slugify_with_normalizer(text, normalizer)` — Convenience alias
-- `slugify_opts_with_normalizer(text, max_len, sep, preserve_unicode, normalizer)`
+- `slugify_with_options_and_normalizer(text, opts, normalizer)` — Use `SlugifyOptions` builder for fine-grained control
 
 ### Normalizer Signature
 
