@@ -24,7 +24,7 @@
 ////
 //// ## Extra Functions
 ////
-//// - **Slugification**: `slugify`, `slugify_opts`
+//// - **Slugification**: `slugify`, `slugify_with_options`
 //// - **ASCII folding**: `ascii_fold`, `ascii_fold_no_decompose`
 //// - **Case conversion**: `to_snake_case`, `to_camel_case`, `to_pascal_case`, 
 ////   `to_kebab_case`, `to_title_case`
@@ -738,31 +738,12 @@ pub fn with_custom_replacements(
 }
 
 /// Creates slug with detailed options (backwards-compatible API).
-pub fn slugify_opts(
-  text: String,
-  max_len: Int,
-  sep: String,
-  preserve_unicode: Bool,
-) -> String {
-  extra.slugify_opts(text, max_len, sep, preserve_unicode)
-}
+// `slugify_opts` has been removed; use `SlugifyOptions` builder and `slugify_with_options` instead.
 
-/// Creates slug with options and custom normalizer.
-pub fn slugify_opts_with_normalizer(
-  text: String,
-  max_len: Int,
-  sep: String,
-  preserve_unicode: Bool,
-  normalizer,
-) -> String {
-  extra.slugify_opts_with_normalizer(
-    text,
-    max_len,
-    sep,
-    preserve_unicode,
-    normalizer,
-  )
-}
+// `slugify_opts_with_normalizer` removed; use `SlugifyOptions` builder and `slugify_with_options_and_normalizer` instead.
+// Example:
+// let opts = str.slugify_options() |> str.with_max_tokens(0) |> str.with_separator("-") |> str.with_preserve_unicode(False)
+// str.slugify_with_options_and_normalizer(text, opts, normalizer)
 
 /// Converts text to ASCII equivalents.
 ///
