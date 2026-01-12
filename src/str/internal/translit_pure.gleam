@@ -3,7 +3,7 @@ import gleam/string
 
 /// Fallback transliteration based on folding the replacements table.
 import str/internal/generated_translit_pairs as gen
-import str/internal/generated_translit_pages as pages_gen
+import str/internal/translit_pure_impl
 
 pub fn replacements_pure() -> List(#(String, String)) {
   gen.replacements_generated()
@@ -23,17 +23,5 @@ pub fn remove_combining_marks_pure(s: String) -> String {
 }
 
 pub fn transliterate_pure(s: String) -> String {
-  // Prefer page-based single-codepoint lookup for speed; fall back to the
-  // full replacements list when a grapheme has no mapping.
-  let gs = string.to_graphemes(s)
-  let parts = list.fold(gs, [], fn(acc, g) {
-    case pages_gen.translit_pages_lookup_by_grapheme(g) {
-      Ok(v) -> [v, ..acc]
-      Error(_) -> [g, ..acc]
-    }
-  })
-  |> list.reverse
-  |> string.concat
-
-  parts
+  translit_pure_impl.transliterate_impl(s)
 }
