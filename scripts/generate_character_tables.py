@@ -6,8 +6,8 @@ Generates machine-readable documentation (docs/character_tables.json) from
 internal Gleam transliteration and decomposition tables.
 
 This script parses:
-- src/str/internal_translit.gleam (character replacements)
-- src/str/internal_decompose.gleam (Latin decompositions)
+- src/str/internal/generated_translit_pairs.gleam (character replacements)
+- src/str/internal/generated_decompose_pairs.gleam (Latin decompositions)
 
 Output format: JSON with "replacements" and "decompositions" arrays.
 
@@ -24,12 +24,12 @@ from typing import List, Tuple
 
 # Project structure
 ROOT = Path(__file__).resolve().parents[1]
-TRANSLIT = ROOT / "src" / "str" / "internal_translit.gleam"
-DECOMPOSE = ROOT / "src" / "str" / "internal_decompose.gleam"
+TRANSLIT = ROOT / "src" / "str" / "internal" / "generated_translit_pairs.gleam"
+DECOMPOSE = ROOT / "src" / "str" / "internal" / "generated_decompose_pairs.gleam"
 OUT = ROOT / "docs" / "character_tables.json"
 
 # Regex patterns for parsing Gleam list syntax
-PAIR_RE = re.compile(r'\[\s*"([^"]+)"\s*,\s*"([^"]+)"\s*\]')
+PAIR_RE = re.compile(r'#\(\s*"([^"]+)"\s*,\s*"([^"]*)"\s*\)')
 U_BRACE_RE = re.compile(r'\\u\{([0-9A-Fa-f]+)\}')
 
 def extract_pairs(path: Path) -> List[Tuple[str, str]]:
