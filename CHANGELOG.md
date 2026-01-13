@@ -6,7 +6,7 @@ All notable changes to this project are documented in this file.
 
 ### 🚀 Breaking
 - Unified public API: prefer `import str` for the majority of use cases; many functions are now re-exported from the main module.
-- Some internal submodules are annotated with `@deprecated` to guide migration to v2.0; 
+- **Removed:** `slugify_opts` and `slugify_opts_with_normalizer` have been removed in favor of the `SlugifyOptions` builder and `slugify_with_options` / `slugify_with_options_and_normalizer` (see `docs/MIGRATION.md`). 
 
 ### ✅ Added
 - Single entrypoint `str` with re-exports for grapheme operations, search, slugify, ascii_fold, etc.
