@@ -173,25 +173,110 @@ pub fn with_custom_replacements(
 }
 
 pub fn slugify_with_options(s: String, opts: SlugifyOptions) -> String {
-  let max_len = case opts.max_tokens >= 0 {
-    True -> opts.max_tokens
-    False -> -1
+  let max_len = case opts.max_tokens >= 0 { True -> opts.max_tokens False -> -1 }
+
+  let base = case opts.preserve_unicode {
+    True -> string.lowercase(s)
+    False -> ascii_fold(s) |> string.lowercase
   }
-  // For now ignore custom_replacements and lowercase flag in opts for simplicity
-  slugify_opts(s, max_len, opts.separator, opts.preserve_unicode)
-}
+
+  let clusters = string.to_graphemes(base)
+
+  let raw =
+    list.fold(clusters, "", fn(acc, g) {
+      case opts.preserve_unicode {
+        True ->
+          case string.trim(g) == "" {
+            True ->
+              case acc == "" || string.ends_with(acc, opts.separator) {
+                True -> acc
+                False -> acc <> opts.separator
+              }
+            False -> acc <> g
+          }
+        False ->
+          case is_alnum_grapheme(g) {
+            True -> acc <> g
+            False ->
+              case acc == "" || string.ends_with(acc, opts.separator) {
+                True -> acc
+                False -> acc <> opts.separator
+              }
+          }
+      }
+    })
+
+  let trimmed = trim_surrounding_sep(string.to_graphemes(raw), opts.separator)
+  let joined = list.fold(trimmed, "", fn(acc, c) { acc <> c })
+  let tokens = string.split(joined, opts.separator)
+
+  let taken = case max_len > 0 { True -> list.take(tokens, max_len) False -> tokens }
+
+  let result =
+    list.fold(taken, "", fn(acc, t) {
+      case acc == "" {
+        True -> acc <> t
+        False -> acc <> opts.separator <> t
+      }
+    })
+
+  result
+} 
 
 pub fn slugify_with_options_and_normalizer(
   s: String,
   opts: SlugifyOptions,
   normalizer,
 ) -> String {
-  let max_len = case opts.max_tokens >= 0 {
-    True -> opts.max_tokens
-    False -> -1
+  let max_len = case opts.max_tokens >= 0 { True -> opts.max_tokens False -> -1 }
+
+  let base = case opts.preserve_unicode {
+    True -> string.lowercase(s)
+    False -> ascii_fold_with_normalizer(s, normalizer) |> string.lowercase
   }
-  slugify_opts_with_normalizer(s, max_len, opts.separator, opts.preserve_unicode, normalizer)
-}
+
+  let clusters = string.to_graphemes(base)
+
+  let raw =
+    list.fold(clusters, "", fn(acc, g) {
+      case opts.preserve_unicode {
+        True ->
+          case string.trim(g) == "" {
+            True ->
+              case acc == "" || string.ends_with(acc, opts.separator) {
+                True -> acc
+                False -> acc <> opts.separator
+              }
+            False -> acc <> g
+          }
+        False ->
+          case is_alnum_grapheme(g) {
+            True -> acc <> g
+            False ->
+              case acc == "" || string.ends_with(acc, opts.separator) {
+                True -> acc
+                False -> acc <> opts.separator
+              }
+          }
+      }
+    })
+
+  let trimmed = trim_surrounding_sep(string.to_graphemes(raw), opts.separator)
+  let joined = list.fold(trimmed, "", fn(acc, c) { acc <> c })
+  let tokens = string.split(joined, opts.separator)
+
+  let taken = case max_len > 0 { True -> list.take(tokens, max_len) False -> tokens }
+
+  let result =
+    list.fold(taken, "", fn(acc, t) {
+      case acc == "" {
+        True -> acc <> t
+        False -> acc <> opts.separator <> t
+      }
+    })
+
+  result
+} 
 
 // Simple helpers used by slugify
 fn trim_leading_sep(gs: List(String), sep: String) -> List(String) {
@@ -234,7 +319,11 @@ fn is_alnum_grapheme(g: String) -> Bool {
 ///   slugify("Café & Bar") -> "cafe-bar"
 ///
 pub fn slugify(s: String) -> String {
-  slugify_opts(s, -1, "-", False)
+  let opts = slugify_options()
+    |> with_max_tokens(-1)
+    |> with_separator("-")
+    |> with_preserve_unicode(False)
+  slugify_with_options(s, opts)
 }
 
 /// Creates a slug using a custom normalizer function.
@@ -242,7 +331,11 @@ pub fn slugify(s: String) -> String {
 ///   slugify_with_normalizer("Café", my_nfd) -> "cafe"
 ///
 pub fn slugify_with_normalizer(s: String, normalizer) -> String {
-  slugify_opts_with_normalizer(s, -1, "-", False, normalizer)
+  let opts = slugify_options()
+    |> with_max_tokens(-1)
+    |> with_separator("-")
+    |> with_preserve_unicode(False)
+  slugify_with_options_and_normalizer(s, opts, normalizer)
 }
 
 /// Converts text to kebab-case (lowercase with hyphens).
@@ -253,129 +346,17 @@ pub fn to_kebab_case(s: String) -> String {
   slugify(s)
 }
 
-/// Creates a slug with configurable options.
-/// max_len limits tokens (-1 for unlimited), sep is the separator,
-/// preserve_unicode keeps Unicode chars if True.
-///
-///   slugify_opts("one two three", 2, "-", False) -> "one-two"
-///   slugify_opts("Hello World", -1, "_", False) -> "hello_world"
-///
-pub fn slugify_opts(
-  s: String,
-  max_len: Int,
-  sep: String,
-  preserve_unicode: Bool,
-) -> String {
-  let base = case preserve_unicode {
-    True -> string.lowercase(s)
-    False -> ascii_fold(s) |> string.lowercase
-  }
-  let clusters = string.to_graphemes(base)
+// `slugify_opts` removed. Use `SlugifyOptions` builder and `slugify_with_options` instead.
+// Example:
+// let opts = slugify_options() |> with_max_tokens(2) |> with_separator("-") |> with_preserve_unicode(False)
+// slugify_with_options("one two three", opts)
 
-  let raw =
-    list.fold(clusters, "", fn(acc, g) {
-      case preserve_unicode {
-        True ->
-          case string.trim(g) == "" {
-            True ->
-              case acc == "" || string.ends_with(acc, sep) {
-                True -> acc
-                False -> acc <> sep
-              }
-            False -> acc <> g
-          }
-        False ->
-          case is_alnum_grapheme(g) {
-            True -> acc <> g
-            False ->
-              case acc == "" || string.ends_with(acc, sep) {
-                True -> acc
-                False -> acc <> sep
-              }
-          }
-      }
-    })
 
-  let trimmed = trim_surrounding_sep(string.to_graphemes(raw), sep)
+// `slugify_opts_with_normalizer` removed. Use `SlugifyOptions` builder and `slugify_with_options_and_normalizer` instead.
+// Example:
+// let opts = slugify_options() |> with_max_tokens(2) |> with_separator("-") |> with_preserve_unicode(False)
+// slugify_with_options_and_normalizer("Crème Brûlée", opts, my_nfd)
 
-  let joined = list.fold(trimmed, "", fn(acc, c) { acc <> c })
-
-  let tokens = string.split(joined, sep)
-  let taken = case max_len > 0 {
-    True -> list.take(tokens, max_len)
-    False -> tokens
-  }
-  let result =
-    list.fold(taken, "", fn(acc, t) {
-      case acc == "" {
-        True -> acc <> t
-        False -> acc <> sep <> t
-      }
-    })
-
-  result
-}
-
-/// Creates a slug with full options and custom normalizer.
-///
-///   slugify_opts_with_normalizer("Crème Brûlée", 2, "-", False, my_nfd) -> "creme-brulee"
-///
-pub fn slugify_opts_with_normalizer(
-  s: String,
-  max_len: Int,
-  sep: String,
-  preserve_unicode: Bool,
-  normalizer,
-) -> String {
-  let base = case preserve_unicode {
-    True -> string.lowercase(s)
-    False -> ascii_fold_with_normalizer(s, normalizer) |> string.lowercase
-  }
-
-  let clusters = string.to_graphemes(base)
-
-  let raw =
-    list.fold(clusters, "", fn(acc, g) {
-      case preserve_unicode {
-        True ->
-          case string.trim(g) == "" {
-            True ->
-              case acc == "" || string.ends_with(acc, sep) {
-                True -> acc
-                False -> acc <> sep
-              }
-            False -> acc <> g
-          }
-        False ->
-          case is_alnum_grapheme(g) {
-            True -> acc <> g
-            False ->
-              case acc == "" || string.ends_with(acc, sep) {
-                True -> acc
-                False -> acc <> sep
-              }
-          }
-      }
-    })
-
-  let trimmed = trim_surrounding_sep(string.to_graphemes(raw), sep)
-  let joined = list.fold(trimmed, "", fn(acc, c) { acc <> c })
-
-  let tokens = string.split(joined, sep)
-  let taken = case max_len > 0 {
-    True -> list.take(tokens, max_len)
-    False -> tokens
-  }
-  let result =
-    list.fold(taken, "", fn(acc, t) {
-      case acc == "" {
-        True -> acc <> t
-        False -> acc <> sep <> t
-      }
-    })
-
-  result
-}
 
 /// Converts text to snake_case (lowercase with underscores).
 ///
