@@ -42,3 +42,4 @@ tmp/
 
 ### user-specific files
 artifacts/
+benchmark/results/
