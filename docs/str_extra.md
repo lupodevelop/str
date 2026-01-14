@@ -97,7 +97,9 @@ slugify("Café & Bar")           // "cafe-bar"
 slugify("2025 — New Year!")     // "2025-new-year"
 ```
 
-### `slugify_opts(text: String, max_len: Int, sep: String, preserve_unicode: Bool) -> String`
+### `slugify_with_options(text: String, opts: SlugifyOptions) -> String`
+
+Use the `SlugifyOptions` builder to construct options; see `docs/MIGRATION.md` for migration examples.
 
 Configurable slug generation.
 
@@ -121,19 +123,23 @@ Configurable slug generation.
 
 ```gleam
 // Token limit
-slugify_opts("one two three four", 2, "-", False)
+let opts = str.slugify_options() |> str.with_max_tokens(2) |> str.with_separator("-") |> str.with_preserve_unicode(False)
+str.slugify_with_options("one two three four", opts)
 // "one-two"
 
 // Custom separator
-slugify_opts("Hello World", 0, "_", False)
+let opts2 = str.slugify_options() |> str.with_max_tokens(0) |> str.with_separator("_") |> str.with_preserve_unicode(False)
+str.slugify_with_options("Hello World", opts2)
 // "hello_world"
 
 // Preserve Unicode
-slugify_opts("Café ❤️ Gleam", 0, "-", True)
+let opts3 = str.slugify_options() |> str.with_max_tokens(0) |> str.with_separator("-") |> str.with_preserve_unicode(True)
+str.slugify_with_options("Café ❤️ Gleam", opts3)
 // "café-❤️-gleam"
 
 // ASCII only
-slugify_opts("Café ❤️ Gleam", 0, "-", False)
+let opts4 = str.slugify_options() |> str.with_max_tokens(0) |> str.with_separator("-") |> str.with_preserve_unicode(False)
+str.slugify_with_options("Café ❤️ Gleam", opts4)
 // "cafe-gleam"
 ```
 
@@ -141,9 +147,9 @@ slugify_opts("Café ❤️ Gleam", 0, "-", False)
 
 #### `slugify_with_normalizer(text: String, normalizer: fn(String) -> String) -> String`
 
-Convenience alias for `slugify_opts_with_normalizer` using defaults.
+Convenience alias for `slugify_with_options_and_normalizer` using defaults.
 
-#### `slugify_opts_with_normalizer(text: String, max_len: Int, sep: String, preserve_unicode: Bool, normalizer: fn(String) -> String) -> String`
+#### `slugify_with_options_and_normalizer(text: String, opts: SlugifyOptions, normalizer: fn(String) -> String) -> String`
 
 Full control over slugification with custom normalization.
 
@@ -153,13 +159,8 @@ Full control over slugification with custom normalization.
 import unicode_helpers
 
 pub fn create_slug(title: String, max_words: Int) -> String {
-  slugify_opts_with_normalizer(
-    title,
-    max_words,
-    "-",
-    False,  // ASCII output
-    unicode_helpers.nfd
-  )
+  let opts = str.slugify_options() |> str.with_max_tokens(max_words) |> str.with_separator("-") |> str.with_preserve_unicode(False)
+  str.slugify_with_options_and_normalizer(title, opts, unicode_helpers.nfd)
 }
 ```
 
@@ -245,46 +246,52 @@ The internal Latin decomposer handles:
 ### Basic Slug Generation
 
 ```gleam
-import str/extra
+import str
 
 pub fn create_post_slug(title: String) -> String {
-  extra.slugify(title)
+  str.slugify(title)
 }
 ```
 
 ### With OTP Normalization
 
 ```gleam
-import str/extra
+import str
 import unicode_helpers
 
 pub fn create_url_slug(title: String, max_words: Int) -> String {
-  extra.slugify_opts_with_normalizer(
-    title,
-    max_words,
-    "-",
-    False,
-    unicode_helpers.nfd
-  )
+  let opts =
+    str.slugify_options()
+    |> str.with_max_tokens(max_words)
+    |> str.with_separator("-")
+    |> str.with_preserve_unicode(False)
+
+  str.slugify_with_options_and_normalizer(title, opts, unicode_helpers.nfd)
 }
 ```
 
 ### File Name Sanitization
 
 ```gleam
-import str/extra
+import str
 
 pub fn sanitize_filename(name: String) -> String {
+  let opts =
+    str.slugify_options()
+    |> str.with_max_tokens(0)
+    |> str.with_separator("_")
+    |> str.with_preserve_unicode(False)
+
   name
-  |> extra.ascii_fold()
-  |> extra.slugify_opts(0, "_", False)
+  |> str.ascii_fold()
+  |> str.slugify_with_options(opts)
 }
 ```
 
 ### Identifier Generation
 
 ```gleam
-import str/extra
+import str
 
 pub fn to_variable_name(text: String) -> String {
   extra.to_snake_case(text)
