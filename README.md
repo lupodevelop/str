@@ -32,7 +32,8 @@
 | 📏 **Similarity** | Levenshtein `distance`, percentage `similarity`, `hamming_distance` |
 | 🧩 **Splitting** | `splitn`, `partition`, `rpartition`, `chunk`, `lines`, `words` |
 | 📐 **Padding** | `pad_left`, `pad_right`, `center`, `fill` |
-| 🚀 **Zero Dependencies** | Pure Gleam implementation with no OTP requirement |
+| 🎯 **Dual Target** | Works on both Erlang and JavaScript targets |
+| 🚀 **Minimal Dependencies** | Only `houdini` and `odysseus` for HTML escaping |
 
 ---
 
@@ -47,34 +48,33 @@ gleam add str
 ## 🚀 Quick Start
 
 ```gleam
-import str/core
-import str/extra
+import str
 
 pub fn main() {
   // 🎯 Grapheme-safe truncation preserves emoji
   let text = "Hello 👩‍👩‍👧‍👦 World"
-  core.truncate(text, 10, "...")
+  str.truncate(text, 10, "...")
   // → "Hello 👩‍👩‍👧‍👦..."
 
   // 🔗 ASCII transliteration and slugification
-  extra.slugify("Crème Brûlée — Recipe 2025!")
-  // → "creme-brulee-recipe-2025"
+  str.slugify("Crème Brûlée — Recipe 2026!")
+  // → "creme-brulee-recipe-2026"
 
   // 🔤 Case conversions
-  extra.to_camel_case("hello world")   // → "helloWorld"
-  extra.to_snake_case("Hello World")   // → "hello_world"
-  core.capitalize("hELLO wORLD")       // → "Hello world"
+  str.to_camel_case("hello world")   // → "helloWorld"
+  str.to_snake_case("Hello World")   // → "hello_world"
+  str.capitalize("hELLO wORLD")       // → "Hello world"
 
   // 🔍 Grapheme-aware search
-  core.index_of("👨‍👩‍👧‍👦 family test", "family")
+  str.index_of("👨‍👩‍👧‍👦 family test", "family")
   // → Ok(2) - counts grapheme clusters, not bytes!
 
   // 📏 String similarity
-  core.similarity("hello", "hallo")
+  str.similarity("hello", "hallo")
   // → 0.8 (80% similar)
   
   // 🛡️ HTML escaping
-  core.escape_html("<script>alert('xss')</script>")
+  str.escape_html("<script>alert('xss')</script>")
   // → "&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;"
 }
 ```
@@ -120,7 +120,6 @@ pub fn main() {
 **Algorithms:**
 - **KMP**: optimized for long/repetitive patterns
 - **Sliding**: fast for short patterns, zero allocations
-
 **APIs:**
 
 | Function | Description |
@@ -134,10 +133,10 @@ pub fn main() {
 
 ```gleam
 // Force KMP explicitly
-core.index_of_strategy("long text...", "pattern", core.Kmp)
+str.index_of_strategy("long text...", "pattern", str.Kmp)
 
 // Let heuristic decide (experimental)
-core.index_of_auto("some text", "pat")
+str.index_of_auto("some text", "pat")
 ```
 
 > **Note:** `_auto` variants use heuristics and may not always choose optimally. For performance-critical code, use `_strategy` variants. Configure thresholds in `src/str/config.gleam`.
@@ -228,34 +227,37 @@ core.index_of_auto("some text", "pat")
 
 ---
 
-## 🔤 Extra Module (str/extra)
+## 🔤 Case Conversions & Slugs
 
 ### Case Conversions
 
 ```gleam
-import str/extra
+import str
 
-extra.to_snake_case("Hello World")    // → "hello_world"
-extra.to_camel_case("hello world")    // → "helloWorld"
-extra.to_pascal_case("hello world")   // → "HelloWorld"
-extra.to_kebab_case("Hello World")    // → "hello-world"
-extra.to_title_case("hello world")    // → "Hello World"
+str.to_snake_case("Hello World")    // → "hello_world"
+str.to_camel_case("hello world")    // → "helloWorld"
+str.to_pascal_case("hello world")   // → "HelloWorld"
+str.to_kebab_case("Hello World")    // → "hello-world"
+str.to_title_case("hello world")    // → "Hello World"
 ```
 
 ### ASCII Folding (Deburr)
 
 ```gleam
-extra.ascii_fold("Crème Brûlée")  // → "Creme Brulee"
-extra.ascii_fold("straße")        // → "strasse"
-extra.ascii_fold("æon")           // → "aeon"
+str.ascii_fold("Crème Brûlée")  // → "Creme Brulee"
+str.ascii_fold("straße")        // → "strasse"
+str.ascii_fold("æon")           // → "aeon"
 ```
 
 ### Slug Generation
 
 ```gleam
-extra.slugify("Hello, World!")                    // → "hello-world"
-extra.slugify_opts("one two three", 2, "-", False) // → "one-two"
-extra.slugify_opts("Hello World", 0, "_", False)   // → "hello_world"
+str.slugify("Hello, World!")                    // → "hello-world"
+let opts = str.slugify_options() |> str.with_max_tokens(2) |> str.with_separator("-") |> str.with_preserve_unicode(False)
+str.slugify_with_options("one two three", opts) // → "one-two"
+
+let opts = str.slugify_options() |> str.with_max_tokens(0) |> str.with_separator("_") |> str.with_preserve_unicode(False)
+str.slugify_with_options("Hello World", opts)   // → "hello_world"
 ```
 
 ---
@@ -266,24 +268,23 @@ extra.slugify_opts("Hello World", 0, "_", False)   // → "hello_world"
 
 | Module | When to use | Import |
 |--------|-------------|--------|
-| **`str`** | Most common operations | `import str` |
-| **`str/core`** | Full grapheme-aware API, advanced features | `import str/core` |
-| **`str/extra`** | ASCII folding, slugs, case conversions | `import str/extra` |
-| **`str/tokenize`** | Reference implementation (pedagogic only) | `import str/tokenize` |
+| **`str`** | ✅ **Recommended** — All public APIs | `import str` |
+| **`str/advanced`** | Low-level KMP/sliding algorithms | `import str/advanced` |
+| **`str/config`** | Tuning search heuristics | `import str/config` |
 
-**Quick start:** Use `import str` for everyday needs. The main `str` module re-exports commonly used functions from `core` and `extra`.
 
-**Advanced users:** Import `str/core` and `str/extra` directly when you need the complete API or want explicit control.
+**Quick start:** Use `import str` for all operations. The main `str` module provides the complete, stable public API.
+
+**Power users:** Use `str/advanced` for explicit control over search algorithms (KMP maps, sliding window).
 
 ### Module structure
 
 ```
 str/
-├── str.gleam       # Main module (re-exports common functions)
-├── core.gleam      # Grapheme-aware utilities
-├── extra.gleam     # ASCII folding, slugs, case conversions
-├── tokenize.gleam  # Pure-Gleam tokenizer (reference)
-└── internal_*      # Character tables (not public API)
+├── str.gleam         # Main module — stable public API
+├── str/advanced.gleam # Low-level search algorithms
+├── str/config.gleam   # Configuration flags
+└── str/internal/      # Implementation details (not public API)
 ```
 
 ---
@@ -292,9 +293,8 @@ str/
 
 | Document | Description |
 |----------|-------------|
-| [Core API](docs/str_core.md) | Grapheme-aware string operations |
-| [Extra API](docs/str_extra.md) | ASCII folding and slug generation |
-| [Tokenizer](docs/str_tokenize.md) | Pure-Gleam tokenizer reference |
+| [API Reference](https://hexdocs.pm/str/) | Complete API documentation on HexDocs |
+| [Migration Guide](docs/MIGRATION.md) | Migrating from 1.x to 2.0 |
 | [Examples](EXAMPLES.md) | Integration examples and OTP patterns |
 | [Character Tables](docs/character_tables.json) | Machine-readable transliteration data |
 
@@ -312,32 +312,35 @@ pub fn otp_nfd(s: String) -> String {
 }
 
 // Use with str:
-extra.ascii_fold_with_normalizer("Crème", otp_nfd)
-extra.slugify_with_normalizer("Café", otp_nfd)
+str.ascii_fold_with_normalizer("Crème", otp_nfd)
+str.slugify_with_normalizer("Café", otp_nfd)
 ```
+
+> **Tip:** You can enable native FFI optimizations by overriding `str/config.gleam` at build-time with `use_native_ffi() -> True`. This uses Erlang's `unicode` module for decomposition and JavaScript's `String.normalize()` for the JS target.
 
 ---
 
 ## 🧪 Development
 
 ```sh
-# Run the test suite
-gleam test
+# Run the test suite (both targets)
+gleam test --target erlang
+gleam test --target javascript
 
 # Regenerate character tables documentation
 python3 scripts/generate_character_tables.py
 ```
 
-Note: as of **1.2.3**, `escape_html` now uses the `houdini` library for fast, allocation‑friendly escaping, and `unescape_html` uses `odysseus` for comprehensive entity support (named, decimal and hex numeric entities). See [CHANGELOG.md](CHANGELOG.md) for details.
+> **Note:** The library supports both Erlang and JavaScript targets. As of **2.0.0**, `escape_html` uses `houdini` and `unescape_html` uses `odysseus`. See [CHANGELOG.md](CHANGELOG.md) for details.
 
 ---
 
 ## 📊 Test Coverage
 
-- **tests** covering all public functions
 - Unicode edge cases (emoji, ZWJ, combining marks)
 - Grapheme cluster boundary handling
-- Cross-module integration tests
+- FFI parity tests (native vs pure implementations)
+- Fuzz tests for slugify, search, and HTML escaping
 
 ---
 
