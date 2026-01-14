@@ -1,5 +1,7 @@
 **Tokenizer**
 
+> **Note (v2.0.0):** The legacy module `str/tokenize` is deprecated; prefer the re-exported tokenizer functions on the main module (`str.chars` and `str.chars_stdlib`) for new code.
+
 - **Description:** The `str` library exposes two tokenizer functions for extracting grapheme clusters from text:
   - `tokenize.chars/1`: an experimental pure-Gleam implementation that approximates grapheme segmentation.
   - `tokenize.chars_stdlib/1`: a thin wrapper over the BEAM stdlib `string.to_graphemes/1` and the recommended choice for production.

@@ -18,7 +18,8 @@ Usage (conceptual)
 3. Pass the helper(s) to the `str` API that accept a normalizer, e.g.:
 
 ```gleam
-let slug = str::extra::slugify_opts_with_normalizer("Crème Brûlée", 0, "-", False, str_otp_helpers::otp_helpers::nfd)
+let opts = str.slugify_options() |> str.with_max_tokens(0) |> str.with_separator("-") |> str.with_preserve_unicode(False)
+let slug = str.slugify_with_options_and_normalizer("Crème Brûlée", opts, str_otp_helpers::otp_helpers::nfd)
 ```
 
 Notes on Erlang interop

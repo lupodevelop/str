@@ -31,21 +31,14 @@ Create a module in your application (e.g., `src/unicode_helpers.gleam`):
 
 ```gleam
 // src/unicode_helpers.gleam
-import gleam/dynamic
 
 /// Normalize to NFD (canonical decomposition)
-pub fn nfd(text: String) -> String {
-  // Use Erlang FFI to call :unicode.characters_to_nfd_binary/1
-  do_normalize(text, "nfd")
-}
+@external(erlang, "unicode", "characters_to_nfd_binary")
+pub fn nfd(text: String) -> String
 
 /// Normalize to NFC (canonical composition)
-pub fn nfc(text: String) -> String {
-  do_normalize(text, "nfc")
-}
-
-@external(erlang, "unicode", "characters_to_nfd_binary")
-fn do_normalize(text: String, mode: String) -> String
+@external(erlang, "unicode", "characters_to_nfc_binary")
+pub fn nfc(text: String) -> String
 ```
 
 ### Step 2: Use with `str` Functions
@@ -53,17 +46,17 @@ fn do_normalize(text: String, mode: String) -> String
 Pass your normalizer to the `*_with_normalizer` variants:
 
 ```gleam
-import str/extra
+import str
 import unicode_helpers
 
 pub fn process_title(title: String) -> String {
   // Use NFC normalization before ASCII folding
-  extra.ascii_fold_with_normalizer(title, unicode_helpers.nfc)
+  str.ascii_fold_with_normalizer(title, unicode_helpers.nfc)
 }
 
 pub fn create_slug(text: String) -> String {
   // Use NFD for decomposition-based transliteration
-  extra.slugify_with_normalizer(text, unicode_helpers.nfd)
+  str.slugify_with_normalizer(text, unicode_helpers.nfd)
 }
 ```
 
@@ -73,8 +66,13 @@ For more control, use `slugify_with_options_and_normalizer` together with the `S
 
 ```gleam
 pub fn create_url_slug(text: String, max_words: Int) -> String {
-  let opts = extra.slugify_options() |> extra.with_max_tokens(max_words) |> extra.with_separator("-") |> extra.with_preserve_unicode(False)
-  extra.slugify_with_options_and_normalizer(text, opts, unicode_helpers.nfd)
+  let opts =
+    str.slugify_options()
+    |> str.with_max_tokens(max_words)
+    |> str.with_separator("-")
+    |> str.with_preserve_unicode(False)
+
+  str.slugify_with_options_and_normalizer(text, opts, unicode_helpers.nfd)
 }
 ```
 
@@ -84,6 +82,8 @@ For testing or development without OTP, create mock normalizers:
 
 ```gleam
 // test/helpers.gleam
+import gleam/string
+
 pub fn mock_nfd(text: String) -> String {
   text
   |> string.replace("é", "e\u{0301}")
@@ -96,19 +96,29 @@ pub fn mock_nfd(text: String) -> String {
 
 ```gleam
 // src/slug.gleam
-import str/extra
+import str
 import unicode_helpers
 
 /// Create a URL-friendly slug from arbitrary text
 pub fn from_text(text: String) -> String {
-  let opts = extra.slugify_options() |> extra.with_max_tokens(0) |> extra.with_separator("-") |> extra.with_preserve_unicode(False)
-  extra.slugify_with_options_and_normalizer(text, opts, unicode_helpers.nfd)
+  let opts =
+    str.slugify_options()
+    |> str.with_max_tokens(0)
+    |> str.with_separator("-")
+    |> str.with_preserve_unicode(False)
+
+  str.slugify_with_options_and_normalizer(text, opts, unicode_helpers.nfd)
 }
 
 /// Create a slug preserving Unicode characters
 pub fn from_text_unicode(text: String) -> String {
-  let opts = extra.slugify_options() |> extra.with_max_tokens(0) |> extra.with_separator("-") |> extra.with_preserve_unicode(True)
-  extra.slugify_with_options_and_normalizer(text, opts, unicode_helpers.nfc)
+  let opts =
+    str.slugify_options()
+    |> str.with_max_tokens(0)
+    |> str.with_separator("-")
+    |> str.with_preserve_unicode(True)
+
+  str.slugify_with_options_and_normalizer(text, opts, unicode_helpers.nfc)
 }
 
 // Usage:
