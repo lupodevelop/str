@@ -1,5 +1,6 @@
-import str
 import gleam/list
+import str
+
 // removed unused import
 
 pub fn smart_search_default_test() {

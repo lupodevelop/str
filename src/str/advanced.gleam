@@ -5,7 +5,7 @@
 //// of KMP maps, or want to benchmark/compare algorithms.
 
 import gleam/dict
-import str/internal/core as core
+import str/internal/core
 
 /// Builds KMP prefix/lookup maps for a pattern.
 pub fn build_kmp_maps(
@@ -54,13 +54,16 @@ pub fn sliding_index_of(text: String, pattern: String) -> Result(Int, Nil) {
 }
 
 /// Chooses optimal search strategy using the library's heuristics.
-pub fn choose_search_strategy(text: String, pattern: String) -> core.SearchStrategy {
+pub fn choose_search_strategy(
+  text: String,
+  pattern: String,
+) -> core.SearchStrategy {
   core.choose_search_strategy(text, pattern)
 }
 
 /// Helper types for users building caches.
-pub type KmpMaps = #(dict.Dict(Int, String), dict.Dict(Int, Int))
-
+pub type KmpMaps =
+  #(dict.Dict(Int, String), dict.Dict(Int, Int))
 /// NOTE: This module is "advanced" — functions here give fine-grained
 /// control and are intended for performance-sensitive code paths. They
 /// may change across minor releases; prefer `import str` for stable APIs.

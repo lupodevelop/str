@@ -1022,8 +1022,7 @@ pub fn rpartition_not_found_test() {
 }
 
 pub fn rpartition_multi_char_sep_test() {
-  assert str.rpartition("one::two::three", "::")
-    == #("one::two", "::", "three")
+  assert str.rpartition("one::two::three", "::") == #("one::two", "::", "three")
 }
 
 pub fn rpartition_single_occurrence_test() {
