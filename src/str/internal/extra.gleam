@@ -7,8 +7,8 @@
 
 import gleam/list
 import gleam/string
-import str/internal_decompose
-import str/internal_translit
+import str/internal/decompose
+import str/internal/translit
 
 /// Core ASCII folding implementation with optional decomposition.
 /// Applies replacement tables, optionally decomposes Latin chars and removes
@@ -24,7 +24,7 @@ import str/internal_translit
 ///
 fn ascii_fold_full(s: String, decompose: Bool) -> String {
   // Use the centralized replacement table from the internal module.
-  let reps = internal_translit.replacements()
+  let reps = translit.replacements()
 
   // Apply replacement table first (handles precomposed characters)
   let replaced =
@@ -40,8 +40,8 @@ fn ascii_fold_full(s: String, decompose: Bool) -> String {
     True -> {
       let after_decompose =
         replaced
-        |> internal_decompose.decompose_latin
-        |> internal_translit.remove_combining_marks
+        |> decompose.decompose_latin
+        |> translit.remove_combining_marks
 
       // Second pass: catch precomposed chars that didn't match initially
       // because they had combining marks attached (string.replace matches
@@ -62,7 +62,6 @@ fn ascii_fold_full(s: String, decompose: Bool) -> String {
 ///   ascii_fold("straße") -> "strasse"
 ///   ascii_fold("Crème Brûlée") -> "Creme Brulee"
 ///
-@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn ascii_fold(s: String) -> String {
   ascii_fold_full(s, True)
 }
@@ -72,7 +71,6 @@ pub fn ascii_fold(s: String) -> String {
 ///
 ///   ascii_fold_no_decompose("café") -> "cafe"
 ///
-@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn ascii_fold_no_decompose(s: String) -> String {
   ascii_fold_full(s, False)
 }
@@ -90,9 +88,8 @@ pub fn ascii_fold_no_decompose(s: String) -> String {
 ///
 ///   ascii_fold_with_normalizer("café", my_nfd) -> "cafe"
 ///
-@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn ascii_fold_with_normalizer(s: String, normalizer) -> String {
-  let reps = internal_translit.replacements()
+  let reps = translit.replacements()
 
   let replaced =
     list.fold(reps, s, fn(acc, pair) {
@@ -102,9 +99,9 @@ pub fn ascii_fold_with_normalizer(s: String, normalizer) -> String {
 
   let after_normalize =
     replaced
-    |> internal_decompose.decompose_latin
+    |> decompose.decompose_latin
     |> normalizer
-    |> internal_translit.remove_combining_marks
+    |> translit.remove_combining_marks
 
   // Second pass for chars that didn't match due to attached combining marks
   list.fold(reps, after_normalize, fn(acc, pair) {
@@ -123,9 +120,8 @@ pub fn ascii_fold_with_normalizer(s: String, normalizer) -> String {
 /// 2. Apply custom normalizer (may produce new precomposed chars)
 /// 3. Apply replacement table again (catch newly composed chars)
 ///
-@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn ascii_fold_no_decompose_with_normalizer(s: String, normalizer) -> String {
-  let reps = internal_translit.replacements()
+  let reps = translit.replacements()
 
   // First pass: handle precomposed characters in the input
   let replaced =
@@ -184,7 +180,6 @@ fn is_alnum_grapheme(g: String) -> Bool {
 ///   slugify("Hello, World!") -> "hello-world"
 ///   slugify("Café & Bar") -> "cafe-bar"
 ///
-@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn slugify(s: String) -> String {
   slugify_opts(s, -1, "-", False)
 }
@@ -193,7 +188,6 @@ pub fn slugify(s: String) -> String {
 ///
 ///   slugify_with_normalizer("Café", my_nfd) -> "cafe"
 ///
-@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn slugify_with_normalizer(s: String, normalizer) -> String {
   slugify_opts_with_normalizer(s, -1, "-", False, normalizer)
 }
@@ -202,7 +196,6 @@ pub fn slugify_with_normalizer(s: String, normalizer) -> String {
 ///
 ///   to_kebab_case("Hello World") -> "hello-world"
 ///
-@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn to_kebab_case(s: String) -> String {
   slugify(s)
 }
@@ -214,7 +207,6 @@ pub fn to_kebab_case(s: String) -> String {
 ///   slugify_opts("one two three", 2, "-", False) -> "one-two"
 ///   slugify_opts("Hello World", -1, "_", False) -> "hello_world"
 ///
-@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn slugify_opts(
   s: String,
   max_len: Int,
@@ -275,7 +267,6 @@ pub fn slugify_opts(
 ///
 ///   slugify_opts_with_normalizer("Crème Brûlée", 2, "-", False, my_nfd) -> "creme-brulee"
 ///
-@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn slugify_opts_with_normalizer(
   s: String,
   max_len: Int,
@@ -337,7 +328,6 @@ pub fn slugify_opts_with_normalizer(
 ///
 ///   to_snake_case("Hello World") -> "hello_world"
 ///
-@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn to_snake_case(s: String) -> String {
   slugify(s) |> string.replace("-", "_")
 }
@@ -348,7 +338,6 @@ pub fn to_snake_case(s: String) -> String {
 ///   to_camel_case("hello world") -> "helloWorld"
 ///   to_camel_case("get user by id") -> "getUserById"
 ///
-@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn to_camel_case(s: String) -> String {
   let parts = string.split(slugify(s), "-")
   list.fold(parts, "", fn(acc, part) {
@@ -372,7 +361,6 @@ pub fn to_camel_case(s: String) -> String {
 ///   to_pascal_case("hello world") -> "HelloWorld"
 ///   to_pascal_case("get user by id") -> "GetUserById"
 ///
-@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn to_pascal_case(s: String) -> String {
   let parts = string.split(slugify(s), "-")
   list.fold(parts, "", fn(acc, part) {
@@ -393,7 +381,6 @@ pub fn to_pascal_case(s: String) -> String {
 ///   to_title_case("get user by id") -> "Get User By Id"
 ///   to_title_case("café brûlée") -> "Cafe Brulee"
 ///
-@deprecated("Will be removed in str 2.0; prefer the unified `str` module when available")
 pub fn to_title_case(s: String) -> String {
   let parts = string.split(slugify(s), "-")
   let capitalized =

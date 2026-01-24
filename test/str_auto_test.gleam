@@ -1,5 +1,5 @@
 import gleam/list
-import str/core
+import str
 
 pub fn index_of_auto_matches_legacy_test() {
   let cases = [
@@ -12,7 +12,7 @@ pub fn index_of_auto_matches_legacy_test() {
 
   list.each(cases, fn(pair) {
     let #(text, pat) = pair
-    assert core.index_of_auto(text, pat) == core.index_of(text, pat)
+    assert str.index_of_auto(text, pat) == str.index_of(text, pat)
   })
 }
 
@@ -27,13 +27,13 @@ pub fn count_auto_matches_legacy_test() {
   // overlapping True
   list.each(cases, fn(pair) {
     let #(text, pat) = pair
-    assert core.count_auto(text, pat, True) == core.count(text, pat, True)
+    assert str.count_auto(text, pat, True) == str.count(text, pat, True)
   })
 
   // non-overlapping False
   list.each(cases, fn(pair) {
     let #(text, pat) = pair
-    assert core.count_auto(text, pat, False) == core.count(text, pat, False)
+    assert str.count_auto(text, pat, False) == str.count(text, pat, False)
   })
 }
 // helper removed: previously unused `repeat` function

@@ -11,6 +11,7 @@
 <p align="center">
   <a href="https://hex.pm/packages/str"><img src="https://img.shields.io/hexpm/v/str" alt="Package Version"></a>
   <a href="https://hexdocs.pm/str/"><img src="https://img.shields.io/badge/hex-docs-ffaff3" alt="Hex Docs"></a>
+  <a href="https://github.com/lupodevelop/str/actions"><img src="https://img.shields.io/github/workflow/status/lupodevelop/str/CI?label=ci&logo=github" alt="CI"></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
 </p>
 

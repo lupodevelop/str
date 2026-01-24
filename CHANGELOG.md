@@ -2,6 +2,54 @@
 
 All notable changes to this project are documented in this file.
 
+## [2.0.0] - 2026-01-24
+
+### Major Release — Unified API
+
+This release completes the migration to a **single-module architecture**, providing a simpler, more intuitive API while maintaining all existing functionality.
+
+### Breaking Changes
+
+- **Module consolidation**: `str/core`, `str/extra`, and `str/tokenize` are now internal. Import `import str` instead.
+- **Removed deprecated public APIs** from `str/core`, `str/extra`, and `str/tokenize`.
+- **Type re-exports**: `SearchStrategy` and `FillPosition` types are now exported directly from `str`.
+
+### Added
+
+- **Unified entry point**: All functions are now accessible via `import str`.
+- **New `str/advanced` module** for power users who need fine-grained control:
+  - `build_kmp_maps/1` — Build KMP prefix/lookup maps for a pattern.
+  - `kmp_search_all_with_maps/3` — KMP search with pre-built maps.
+  - `kmp_index_of_with_maps/4` — KMP index with pre-built maps.
+  - `kmp_index_of/2`, `kmp_search_all/2` — Direct KMP algorithm access.
+  - `sliding_index_of/2`, `sliding_search_all/2` — Direct sliding-window access.
+  - `choose_search_strategy/2` — Expose the library's heuristic chooser.
+- **Alias functions** for clarity:
+  - `index_of_simple/2` — Explicit simple/stable implementation.
+  - `count_simple/3` — Explicit simple/stable implementation.
+- **Re-exported types** from main module:
+  - `str.SearchStrategy` with constructors `str.Kmp`, `str.Sliding`.
+  - `str.FillPosition` with constructors `str.Left`, `str.Right`, `str.Both`.
+
+### Changed
+
+- **Default search behavior**: `index_of/2` and `count/3` remain simple/stable implementations. Use `index_of_auto/2` and `count_auto/3` for heuristic-based auto-optimization.
+- **Internal restructure**: Implementation details moved to `str/internal/*` modules.
+- **Improved documentation**: Module-level docs with comprehensive examples.
+
+### Deprecated
+
+- **`str/core`, `str/extra`, `str/tokenize`**: These modules are now internal. All public APIs have been moved to `str` or `str/advanced`.
+
+### Notes
+
+- Zero OTP dependencies maintained.
+- Grapheme-aware behavior unchanged.
+
+Contributed by: Daniele (`lupodevelop`)
+
+---
+
 ## [1.3.0] - 2026-01-09
 ### Deprecated
 - Deprecated public APIs in internal modules (`str/core`, `str/extra`, and `str/tokenize`) in
