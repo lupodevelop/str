@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://hex.pm/packages/str"><img src="https://img.shields.io/hexpm/v/str" alt="Package Version"></a>
   <a href="https://hexdocs.pm/str/"><img src="https://img.shields.io/badge/hex-docs-ffaff3" alt="Hex Docs"></a>
-  <a href="https://github.com/lupodevelop/str/actions"><img src="https://img.shields.io/github/workflow/status/lupodevelop/str/CI?label=ci&logo=github" alt="CI"></a>
+  <a href="https://github.com/lupodevelop/str/actions"><img src="https://img.shields.io/github/actions/workflow/status/lupodevelop/str/ci.yml?branch=main&label=ci&logo=github" alt="CI"></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
 </p>
 
@@ -32,7 +32,7 @@
 | 📏 **Similarity** | Levenshtein `distance`, percentage `similarity`, `hamming_distance` |
 | 🧩 **Splitting** | `splitn`, `partition`, `rpartition`, `chunk`, `lines`, `words` |
 | 📐 **Padding** | `pad_left`, `pad_right`, `center`, `fill` |
-| 🚀 **Zero Dependencies** | Pure Gleam implementation with no OTP requirement |
+| 🚀 **Minimal Dependencies** | Pure Gleam implementation with no OTP requirement |
 
 ---
 
@@ -47,34 +47,33 @@ gleam add str
 ## 🚀 Quick Start
 
 ```gleam
-import str/core
-import str/extra
+import str
 
 pub fn main() {
   // 🎯 Grapheme-safe truncation preserves emoji
   let text = "Hello 👩‍👩‍👧‍👦 World"
-  core.truncate(text, 10, "...")
+  str.truncate(text, 10, "...")
   // → "Hello 👩‍👩‍👧‍👦..."
 
   // 🔗 ASCII transliteration and slugification
-  extra.slugify("Crème Brûlée — Recipe 2025!")
+  str.slugify("Crème Brûlée — Recipe 2025!")
   // → "creme-brulee-recipe-2025"
 
   // 🔤 Case conversions
-  extra.to_camel_case("hello world")   // → "helloWorld"
-  extra.to_snake_case("Hello World")   // → "hello_world"
-  core.capitalize("hELLO wORLD")       // → "Hello world"
+  str.to_camel_case("hello world")   // → "helloWorld"
+  str.to_snake_case("Hello World")   // → "hello_world"
+  str.capitalize("hELLO wORLD")      // → "Hello world"
 
   // 🔍 Grapheme-aware search
-  core.index_of("👨‍👩‍👧‍👦 family test", "family")
+  str.index_of("👨‍👩‍👧‍👦 family test", "family")
   // → Ok(2) - counts grapheme clusters, not bytes!
 
   // 📏 String similarity
-  core.similarity("hello", "hallo")
+  str.similarity("hello", "hallo")
   // → 0.8 (80% similar)
   
   // 🛡️ HTML escaping
-  core.escape_html("<script>alert('xss')</script>")
+  str.escape_html("<script>alert('xss')</script>")
   // → "&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;"
 }
 ```
@@ -134,10 +133,10 @@ pub fn main() {
 
 ```gleam
 // Force KMP explicitly
-core.index_of_strategy("long text...", "pattern", core.Kmp)
+str.index_of_strategy("long text...", "pattern", str.Kmp)
 
 // Let heuristic decide (experimental)
-core.index_of_auto("some text", "pat")
+str.index_of_auto("some text", "pat")
 ```
 
 > **Note:** `_auto` variants use heuristics and may not always choose optimally. For performance-critical code, use `_strategy` variants. Configure thresholds in `src/str/config.gleam`.
@@ -228,34 +227,34 @@ core.index_of_auto("some text", "pat")
 
 ---
 
-## 🔤 Extra Module (str/extra)
+## 🔤 Case Conversions & ASCII Folding
 
 ### Case Conversions
 
 ```gleam
-import str/extra
+import str
 
-extra.to_snake_case("Hello World")    // → "hello_world"
-extra.to_camel_case("hello world")    // → "helloWorld"
-extra.to_pascal_case("hello world")   // → "HelloWorld"
-extra.to_kebab_case("Hello World")    // → "hello-world"
-extra.to_title_case("hello world")    // → "Hello World"
+str.to_snake_case("Hello World")    // → "hello_world"
+str.to_camel_case("hello world")    // → "helloWorld"
+str.to_pascal_case("hello world")   // → "HelloWorld"
+str.to_kebab_case("Hello World")    // → "hello-world"
+str.to_title_case("hello world")    // → "Hello World"
 ```
 
 ### ASCII Folding (Deburr)
 
 ```gleam
-extra.ascii_fold("Crème Brûlée")  // → "Creme Brulee"
-extra.ascii_fold("straße")        // → "strasse"
-extra.ascii_fold("æon")           // → "aeon"
+str.ascii_fold("Crème Brûlée")  // → "Creme Brulee"
+str.ascii_fold("straße")        // → "strasse"
+str.ascii_fold("æon")           // → "aeon"
 ```
 
 ### Slug Generation
 
 ```gleam
-extra.slugify("Hello, World!")                    // → "hello-world"
-extra.slugify_opts("one two three", 2, "-", False) // → "one-two"
-extra.slugify_opts("Hello World", 0, "_", False)   // → "hello_world"
+str.slugify("Hello, World!")                    // → "hello-world"
+str.slugify_opts("one two three", 2, "-", False) // → "one-two"
+str.slugify_opts("Hello World", 0, "_", False)   // → "hello_world"
 ```
 
 ---
@@ -266,24 +265,22 @@ extra.slugify_opts("Hello World", 0, "_", False)   // → "hello_world"
 
 | Module | When to use | Import |
 |--------|-------------|--------|
-| **`str`** | Most common operations | `import str` |
-| **`str/core`** | Full grapheme-aware API, advanced features | `import str/core` |
-| **`str/extra`** | ASCII folding, slugs, case conversions | `import str/extra` |
-| **`str/tokenize`** | Reference implementation (pedagogic only) | `import str/tokenize` |
+| **`str`** | All string operations (recommended) | `import str` |
+| **`str/advanced`** | Low-level KMP algorithms, caching | `import str/advanced` |
+| **`str/config`** | Search heuristics configuration | `import str/config` |
 
-**Quick start:** Use `import str` for everyday needs. The main `str` module re-exports commonly used functions from `core` and `extra`.
+**Quick start:** Use `import str` for all your needs. The main `str` module provides the complete public API including grapheme operations, ASCII folding, slugs, and case conversions.
 
-**Advanced users:** Import `str/core` and `str/extra` directly when you need the complete API or want explicit control.
+**Advanced users:** Import `str/advanced` for explicit control over search algorithms and KMP map caching.
 
 ### Module structure
 
 ```
 str/
-├── str.gleam       # Main module (re-exports common functions)
-├── core.gleam      # Grapheme-aware utilities
-├── extra.gleam     # ASCII folding, slugs, case conversions
-├── tokenize.gleam  # Pure-Gleam tokenizer (reference)
-└── internal_*      # Character tables (not public API)
+├── str.gleam       # Main module (complete public API)
+├── advanced.gleam  # Low-level search algorithms
+├── config.gleam    # Search heuristics configuration
+└── internal/       # Implementation details (not public API)
 ```
 
 ---
@@ -305,6 +302,8 @@ str/
 The library core is OTP-free by design. For production Unicode normalization (NFC/NFD):
 
 ```gleam
+import str
+
 // In your application code:
 pub fn otp_nfd(s: String) -> String {
   // Call Erlang's :unicode module
@@ -312,8 +311,8 @@ pub fn otp_nfd(s: String) -> String {
 }
 
 // Use with str:
-extra.ascii_fold_with_normalizer("Crème", otp_nfd)
-extra.slugify_with_normalizer("Café", otp_nfd)
+str.ascii_fold_with_normalizer("Crème", otp_nfd)
+str.slugify_with_normalizer("Café", otp_nfd)
 ```
 
 ---
@@ -328,7 +327,7 @@ gleam test
 python3 scripts/generate_character_tables.py
 ```
 
-Note: as of **1.2.3**, `escape_html` now uses the `houdini` library for fast, allocation‑friendly escaping, and `unescape_html` uses `odysseus` for comprehensive entity support (named, decimal and hex numeric entities). See [CHANGELOG.md](CHANGELOG.md) for details.
+Note: as of **2.0.0**, `escape_html` now uses the `houdini` library for fast, allocation‑friendly escaping, and `unescape_html` uses `odysseus` for comprehensive entity support (named, decimal and hex numeric entities). See [CHANGELOG.md](CHANGELOG.md) for details.
 
 ---
 
