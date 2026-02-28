@@ -2,6 +2,31 @@
 
 All notable changes to this project are documented in this file.
 
+## [2.0.1] - 2026-02-28
+
+### Fixed
+
+- **`truncate_with_flag`**: text that already fits within `max_len` was still being truncated when `text_len + suffix_len > max_len`. For example `truncate("Hello!", 8, "...")` returned `"Hello..."` instead of `"Hello!"`. The suffix is now only appended when the text is actually cut.
+- **`starts_with_any` / `ends_with_any`**: used the stdlib's byte-level `string.starts_with`/`string.ends_with` instead of the library's grapheme-aware versions, causing incorrect matches on strings with combining marks (e.g. `"e\u{0301}"` would wrongly match prefix `"e"`).
+- **`center` doc comment**: stated "left side receives more" but the implementation gives more padding to the right side. Comment corrected.
+
+### Changed
+
+- **`find_emoji_index`**: removed unused `start` parameter that was always passed as `0`, simplified the internal loop.
+- **`repeat_str`**: replaced `list.range` + `list.fold` with a direct recursive loop to avoid an intermediate list allocation.
+
+### Tests
+
+- Added regression tests for the `truncate` noop case, grapheme-aware `starts_with_any`/`ends_with_any`, and `center` right-bias.
+
+### Documentation
+
+- Updated examples and documentation to reflect the 2.0 public API and clean up outdated snippets.
+
+Contributed by: Daniele (`lupodevelop`)
+
+---
+
 ## [2.0.0] - 2026-01-24
 
 ### Major Release — Unified API

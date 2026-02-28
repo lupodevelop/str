@@ -1,8 +1,11 @@
-# str/core — Grapheme-Aware Core Utilities
+# str — Grapheme-Aware Core Utilities
+
+> **Note (2.0+):** The `str/core` module is now internal (`str/internal/core`). All functions
+> documented here are available via `import str`. Use `str.function_name()` in your code.
 
 ## Overview
 
-The `str/core` module provides fundamental string operations that correctly handle Unicode grapheme clusters, including:
+The core of `str` provides fundamental string operations that correctly handle Unicode grapheme clusters, including:
 
 - Complex emoji sequences (ZWJ, skin tones, flags)
 - Combining character sequences (diacritics, accents)
@@ -133,7 +136,7 @@ Pads text on the right.
 
 #### `center(text: String, width: Int, pad: String) -> String`
 
-Centers text within the specified width (left-biased when uneven).
+Centers text within the specified width (right-biased when uneven: extra padding goes to the right).
 
 **Example**:
 ```gleam

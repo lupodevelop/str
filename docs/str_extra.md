@@ -1,8 +1,11 @@
-# str/extra — ASCII Transliteration and Slug Generation
+# str — ASCII Transliteration and Slug Generation
+
+> **Note (2.0+):** The `str/extra` module is now internal (`str/internal/extra`). All functions
+> documented here are available via `import str`. Use `str.function_name()` in your code.
 
 ## Overview
 
-The `str/extra` module provides practical utilities for:
+The `str` library provides practical utilities for:
 
 - Converting Unicode text to ASCII equivalents
 - Generating URL-friendly slugs
@@ -240,26 +243,26 @@ The internal Latin decomposer handles:
 
 **Note**: Coverage is optimized for Western European languages. For comprehensive Unicode support, use an external transliteration library.
 
-## Production Usage
+### Production Usage
 
 ### Basic Slug Generation
 
 ```gleam
-import str/extra
+import str
 
 pub fn create_post_slug(title: String) -> String {
-  extra.slugify(title)
+  str.slugify(title)
 }
 ```
 
 ### With OTP Normalization
 
 ```gleam
-import str/extra
+import str
 import unicode_helpers
 
 pub fn create_url_slug(title: String, max_words: Int) -> String {
-  extra.slugify_opts_with_normalizer(
+  str.slugify_opts_with_normalizer(
     title,
     max_words,
     "-",
@@ -272,26 +275,26 @@ pub fn create_url_slug(title: String, max_words: Int) -> String {
 ### File Name Sanitization
 
 ```gleam
-import str/extra
+import str
 
 pub fn sanitize_filename(name: String) -> String {
   name
-  |> extra.ascii_fold()
-  |> extra.slugify_opts(0, "_", False)
+  |> str.ascii_fold()
+  |> str.slugify_opts(0, "_", False)
 }
 ```
 
 ### Identifier Generation
 
 ```gleam
-import str/extra
+import str
 
 pub fn to_variable_name(text: String) -> String {
-  extra.to_snake_case(text)
+  str.to_snake_case(text)
 }
 
 pub fn to_function_name(text: String) -> String {
-  extra.to_camel_case(text)
+  str.to_camel_case(text)
 }
 ```
 
@@ -306,14 +309,14 @@ pub fn to_function_name(text: String) -> String {
 
 To add custom replacements:
 
-1. Edit `src/str/internal_translit.gleam`
+1. Edit `src/str/internal/translit.gleam`
 2. Add entries to the `replacements()` table
 3. Regenerate documentation: `python3 scripts/generate_character_tables.py`
 4. Test with real-world examples
 
 ## See Also
 
-- [str/core](str_core.md) — Grapheme-aware core utilities
+- [str](str_core.md) — Grapheme-aware core utilities
 - [OTP Integration Guide](../examples/with_otp.md) — Unicode normalization setup
 - [Examples](../EXAMPLES.md) — Integration patterns
 - [Character Tables](character_tables.json) — Machine-readable replacement data
