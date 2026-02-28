@@ -1212,3 +1212,38 @@ pub fn normalize_whitespace_empty_test() {
 pub fn normalize_whitespace_only_spaces_test() {
   assert str.normalize_whitespace("     ") == ""
 }
+
+// --- Fix regression tests ---
+
+/// truncate should NOT truncate text that already fits within max_len,
+/// even when text + suffix would exceed max_len.
+pub fn truncate_noop_when_text_fits_test() {
+  // 6 chars, max_len=8: text fits, no truncation needed
+  assert str.truncate("Hello!", 8, "...") == "Hello!"
+  // exact fit
+  assert str.truncate("12345678", 8, "...") == "12345678"
+  // well within limit
+  assert str.truncate("Hi", 10, "...") == "Hi"
+}
+
+/// starts_with_any should be grapheme-aware (combining marks).
+pub fn starts_with_any_grapheme_aware_test() {
+  // "e" + combining accent = one grapheme "é"
+  let text = "e\u{0301}llo"
+  // byte-level would match "e", but grapheme-aware should not
+  assert str.starts_with_any(text, ["e"]) == False
+  assert str.starts_with_any(text, ["e\u{0301}"]) == True
+}
+
+/// ends_with_any should be grapheme-aware (combining marks).
+pub fn ends_with_any_grapheme_aware_test() {
+  let text = "caf" <> "e\u{0301}"
+  assert str.ends_with_any(text, ["e"]) == False
+  assert str.ends_with_any(text, ["e\u{0301}"]) == True
+}
+
+/// center right-bias: odd padding gives more to the right side.
+pub fn center_right_bias_test() {
+  // width=5, text="hi" (2), total_pad=3 → left=1, right=2
+  assert str.center("hi", 5, " ") == " hi  "
+}

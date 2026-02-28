@@ -82,7 +82,7 @@ fn truncate_with_emoji_inclusion(
   // clusters to include up to that emoji to avoid splitting it.
   let window = list.take(clusters, take + grapheme_len(suffix))
 
-  let keep = case find_emoji_index(window, 0) {
+  let keep = case find_emoji_index(window) {
     Ok(idx) ->
       // If emoji is beyond current `take`, include up to the emoji.
       case idx + 1 > take {
@@ -98,21 +98,17 @@ fn truncate_with_emoji_inclusion(
 /// Finds the index of the first emoji-containing cluster in a list.
 ///
 /// Returns Ok(index) if found, Error(Nil) if no emoji detected.
-fn find_emoji_index(clusters: List(String), start: Int) -> Result(Int, Nil) {
-  find_emoji_index_loop(clusters, start, 0)
+fn find_emoji_index(clusters: List(String)) -> Result(Int, Nil) {
+  find_emoji_index_loop(clusters, 0)
 }
 
-fn find_emoji_index_loop(
-  clusters: List(String),
-  idx: Int,
-  offset: Int,
-) -> Result(Int, Nil) {
+fn find_emoji_index_loop(clusters: List(String), index: Int) -> Result(Int, Nil) {
   case clusters {
     [] -> Error(Nil)
     [first, ..rest] ->
       case cluster_has_emoji(first) {
-        True -> Ok(idx + offset)
-        False -> find_emoji_index_loop(rest, idx, offset + 1)
+        True -> Ok(index)
+        False -> find_emoji_index_loop(rest, index + 1)
       }
   }
 }
@@ -180,9 +176,13 @@ pub fn is_blank(text: String) -> Bool {
 ///
 /// Internal helper for padding operations. Returns empty string if n <= 0.
 fn repeat_str(s: String, n: Int) -> String {
+  repeat_str_loop(s, n, "")
+}
+
+fn repeat_str_loop(s: String, n: Int, acc: String) -> String {
   case n <= 0 {
-    True -> ""
-    False -> list.fold(list.range(1, n), "", fn(acc, _) { acc <> s })
+    True -> acc
+    False -> repeat_str_loop(s, n - 1, acc <> s)
   }
 }
 
@@ -292,7 +292,7 @@ pub fn pad_right(text: String, width: Int, pad: String) -> String {
 }
 
 /// Centers text within the specified width using the given padding.
-/// When padding is uneven, the left side receives more (left-biased).
+/// When padding is uneven, the right side receives more (text shifts left).
 ///
 ///   center("hi", 6, " ") -> "  hi  "
 ///   center("hi", 5, " ") -> " hi  "
@@ -457,9 +457,9 @@ pub fn truncate_with_flag(
   case max_len <= 0 {
     True -> ""
     False ->
-      // If the text already fits and appending the suffix wouldn't exceed max_len,
-      // return the original text.
-      case total <= max_len && total + suffix_len <= max_len {
+      // If the text already fits within max_len, return it unchanged.
+      // The suffix is only added when text is actually truncated.
+      case total <= max_len {
         True -> text
         False ->
           case take <= 0 {
@@ -1203,7 +1203,7 @@ pub fn ensure_suffix(text: String, suffix: String) -> String {
 ///   starts_with_any("test", []) -> False
 ///
 pub fn starts_with_any(text: String, prefixes: List(String)) -> Bool {
-  list.any(prefixes, fn(prefix) { string.starts_with(text, prefix) })
+  list.any(prefixes, fn(prefix) { starts_with(text, prefix) })
 }
 
 /// Checks if text ends with any of the given suffixes.
@@ -1213,7 +1213,7 @@ pub fn starts_with_any(text: String, prefixes: List(String)) -> Bool {
 ///   ends_with_any("test", []) -> False
 ///
 pub fn ends_with_any(text: String, suffixes: List(String)) -> Bool {
-  list.any(suffixes, fn(suffix) { string.ends_with(text, suffix) })
+  list.any(suffixes, fn(suffix) { ends_with(text, suffix) })
 }
 
 // ============================================================================
