@@ -157,6 +157,14 @@ pub fn replacements() -> List(#(String, String)) {
     // Czech/Slovak extras
     #("Ŕ", "R"),
     #("ŕ", "r"),
+    // Common Symbols
+    #("€", "EUR"),
+    #("£", "GBP"),
+    #("¥", "JPY"),
+    #("©", "(c)"),
+    #("®", "(r)"),
+    #("™", "tm"),
+    #("…", "..."),
   ]
 }
 

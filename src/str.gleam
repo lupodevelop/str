@@ -430,6 +430,11 @@ pub fn is_lowercase(text: String) -> Bool {
   core.is_lowercase(text)
 }
 
+/// Checks if text contains both uppercase and lowercase characters.
+pub fn is_mixed_case(text: String) -> Bool {
+  core.is_mixed_case(text)
+}
+
 /// Checks if text is in Title Case format.
 pub fn is_title_case(text: String) -> Bool {
   core.is_title_case(text)
@@ -785,6 +790,26 @@ pub fn to_kebab_case(text: String) -> String {
 /// Converts text to Title Case.
 pub fn to_title_case(text: String) -> String {
   extra.to_title_case(text)
+}
+
+/// Converts camelCase or PascalCase to snake_case.
+pub fn camel_to_snake(text: String) -> String {
+  extra.camel_to_snake(text)
+}
+
+/// Alias for camel_to_snake.
+pub fn pascal_to_snake(text: String) -> String {
+  extra.pascal_to_snake(text)
+}
+
+/// Converts snake_case to camelCase.
+pub fn snake_to_camel(text: String) -> String {
+  extra.snake_to_camel(text)
+}
+
+/// Converts snake_case to PascalCase.
+pub fn snake_to_pascal(text: String) -> String {
+  extra.snake_to_pascal(text)
 }
 
 // ============================================================================

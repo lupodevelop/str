@@ -91,6 +91,7 @@ pub fn main() {
 | `is_uppercase(text)` | `"HELLO123"` | `True` |
 | `is_lowercase(text)` | `"hello_world"` | `True` |
 | `is_title_case(text)` | `"Hello World"` | `True` |
+| `is_mixed_case(text)` | `"helloWorld"` | `True` |
 
 ### ✂️ Grapheme Extraction
 
@@ -239,6 +240,10 @@ str.to_camel_case("hello world")    // → "helloWorld"
 str.to_pascal_case("hello world")   // → "HelloWorld"
 str.to_kebab_case("Hello World")    // → "hello-world"
 str.to_title_case("hello world")    // → "Hello World"
+str.camel_to_snake("camelCase")     // → "camel_case"
+str.snake_to_camel("snake_case")    // → "snakeCase"
+str.pascal_to_snake("PascalCase")   // → "pascal_case"
+str.snake_to_pascal("snake_case")   // → "SnakeCase"
 ```
 
 ### ASCII Folding (Deburr)

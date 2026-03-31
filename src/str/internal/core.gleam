@@ -13,6 +13,7 @@ import gleam/dict
 import gleam/int
 import gleam/list
 import gleam/string
+import gleam/string_tree
 import houdini
 import odysseus
 import str/config
@@ -154,6 +155,12 @@ pub fn words(text: String) -> List(String) {
     |> string.replace("\n", " ")
     |> string.replace("\r", " ")
     |> string.replace("\t", " ")
+    |> string.replace("\u{00A0}", " ")
+    |> string.replace("\u{2002}", " ")
+    |> string.replace("\u{2003}", " ")
+    |> string.replace("\u{2009}", " ")
+    |> string.replace("\u{200B}", " ")
+    |> string.replace("\u{3000}", " ")
 
   normalized
   |> string.split(" ")
@@ -176,13 +183,20 @@ pub fn is_blank(text: String) -> Bool {
 ///
 /// Internal helper for padding operations. Returns empty string if n <= 0.
 fn repeat_str(s: String, n: Int) -> String {
-  repeat_str_loop(s, n, "")
+  case n <= 0 {
+    True -> ""
+    False -> repeat_str_loop(s, n, string_tree.new()) |> string_tree.to_string
+  }
 }
 
-fn repeat_str_loop(s: String, n: Int, acc: String) -> String {
+fn repeat_str_loop(
+  s: String,
+  n: Int,
+  acc: string_tree.StringTree,
+) -> string_tree.StringTree {
   case n <= 0 {
     True -> acc
-    False -> repeat_str_loop(s, n - 1, acc <> s)
+    False -> repeat_str_loop(s, n - 1, string_tree.append(acc, s))
   }
 }
 
@@ -1644,6 +1658,24 @@ pub fn is_lowercase(text: String) -> Bool {
     True -> False
     False -> list.all(cased_chars, is_grapheme_lowercase)
   }
+}
+
+/// Checks if text contains both uppercase and lowercase characters.
+/// Non-cased characters are ignored.
+/// Returns False for empty strings or strings with no cased characters.
+///
+///   is_mixed_case("Hello") -> True
+///   is_mixed_case("hello") -> False
+///   is_mixed_case("HELLO") -> False
+///   is_mixed_case("Hello123") -> True
+///   is_mixed_case("123") -> False
+///   is_mixed_case("") -> False
+///
+pub fn is_mixed_case(text: String) -> Bool {
+  let chars = string.to_graphemes(text)
+  let has_upper = list.any(chars, is_grapheme_uppercase)
+  let has_lower = list.any(chars, is_grapheme_lowercase)
+  has_upper && has_lower
 }
 
 /// Checks if text is in Title Case (first letter of each word is uppercase).
