@@ -14,6 +14,7 @@ pub fn length_edge_cases_test() {
   assert str.length("👩‍❤️‍👨") == 1
 
   // Long string sanity: 500 'x' characters
-  let long = int.range(from: 1, to: 501, with: "", run: fn(acc, _) { acc <> "x" })
+  let long =
+    int.range(from: 1, to: 501, with: "", run: fn(acc, _) { acc <> "x" })
   assert str.length(long) == 500
 }

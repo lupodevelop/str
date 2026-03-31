@@ -1340,7 +1340,9 @@ pub fn distance(a: String, b: String) -> Int {
 /// Uses a single row for space efficiency.
 fn levenshtein(a: List(String), b: List(String), _a_len: Int, b_len: Int) -> Int {
   // Initialize first row: [0, 1, 2, ..., b_len]
-  let initial_row = int.range(from: 0, to: b_len + 1, with: [], run: list.prepend) |> list.reverse
+  let initial_row =
+    int.range(from: 0, to: b_len + 1, with: [], run: list.prepend)
+    |> list.reverse
 
   // Process each character of a
   let final_row =

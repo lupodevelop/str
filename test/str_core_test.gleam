@@ -407,7 +407,8 @@ pub fn grapple_len_behavior_test() {
   assert str.length("👨‍👩‍👧‍👦") == 1
 
   // Stress: long ASCII string should return its length
-  let long = int.range(from: 1, to: 1001, with: "", run: fn(acc, _) { acc <> "x" })
+  let long =
+    int.range(from: 1, to: 1001, with: "", run: fn(acc, _) { acc <> "x" })
   assert str.length(long) == 1000
 }
 

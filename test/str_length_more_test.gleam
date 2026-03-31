@@ -30,6 +30,7 @@ pub fn length_more_test() {
   assert str.length("𐐷") == 1
 
   // Long ASCII string
-  let long = int.range(from: 1, to: 101, with: "", run: fn(acc, _) { acc <> "x" })
+  let long =
+    int.range(from: 1, to: 101, with: "", run: fn(acc, _) { acc <> "x" })
   assert str.length(long) == 100
 }
