@@ -11,8 +11,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Updated `gleam_stdlib` usage to comply with latest versions:
+    - Replaced deprecated `list.range` with `int.range` for improved performance and zero-warning compilation.
+    - Optimized string building in `repeat_str` by replacing basic concatenation with `gleam/string_tree`.
 - Enhanced `words` to handle additional Unicode whitespace characters (non-breaking space, en-space, em-space, thin space, zero-width space, ideographic space).
-- Optimized string concatenation in `repeat_str` by replacing basic concatenation with `gleam/string_tree` for better performance on large string repetitions.
 
 ---
 

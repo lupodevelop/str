@@ -1,3 +1,4 @@
+import gleam/int
 import gleam/list
 import str
 import str/internal/core
@@ -31,5 +32,5 @@ pub fn count_strategy_kmp_test() {
 }
 
 fn repeat(s: String, n: Int) -> String {
-  list.fold(list.range(1, n), "", fn(acc, _) { acc <> s })
+  int.range(from: 1, to: n + 1, with: "", run: fn(acc, _) { acc <> s })
 }

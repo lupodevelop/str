@@ -1,3 +1,4 @@
+import gleam/int
 import gleam/list
 import gleam/string
 import gleeunit
@@ -68,16 +69,14 @@ fn idx_for(seed: Int, i: Int, len: Int) -> Int {
 
 fn gen_string(seed: Int, tokens: List(String), n: Int) -> String {
   let len = list.length(tokens)
-  let seq = list.range(0, n - 1)
-  seq
-  |> list.map(fn(i) {
+  int.range(from: 0, to: n, with: "", run: fn(acc, i) {
     let j = idx_for(seed, i, len)
-    case list.drop(tokens, j) {
+    let token = case list.drop(tokens, j) {
       [first, ..] -> first
       [] -> ""
     }
+    acc <> token
   })
-  |> list.fold("", fn(acc, s) { acc <> s })
 }
 
 fn run_cfg(seed: Int, n: Int, tokens: List(String)) -> Bool {

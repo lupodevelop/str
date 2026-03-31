@@ -1,4 +1,4 @@
-import gleam/list
+import gleam/int
 import str
 
 pub fn length_edge_cases_test() {
@@ -14,6 +14,6 @@ pub fn length_edge_cases_test() {
   assert str.length("👩‍❤️‍👨") == 1
 
   // Long string sanity: 500 'x' characters
-  let long = list.fold(list.range(1, 500), "", fn(acc, _) { acc <> "x" })
+  let long = int.range(from: 1, to: 501, with: "", run: fn(acc, _) { acc <> "x" })
   assert str.length(long) == 500
 }

@@ -1340,7 +1340,7 @@ pub fn distance(a: String, b: String) -> Int {
 /// Uses a single row for space efficiency.
 fn levenshtein(a: List(String), b: List(String), _a_len: Int, b_len: Int) -> Int {
   // Initialize first row: [0, 1, 2, ..., b_len]
-  let initial_row = list.range(0, b_len)
+  let initial_row = int.range(from: 0, to: b_len + 1, with: [], run: list.prepend) |> list.reverse
 
   // Process each character of a
   let final_row =
@@ -1799,12 +1799,16 @@ pub fn is_hex(text: String) -> Bool {
 ///   escape_html("Tom & Jerry") -> "Tom &amp; Jerry"
 ///   escape_html("Say \"hello\"") -> "Say &quot;hello&quot;"
 ///
+/// Escapes a string to be safely used inside an HTML document.
+///
+///   escape_html("<div>") -> "&lt;div&gt;"
+///   escape_html("Tom & Jerry") -> "Tom &amp; Jerry"
+///
 pub fn escape_html(text: String) -> String {
   houdini.escape(text)
 }
 
 /// Unescapes HTML entities to their character equivalents.
-/// Handles: &amp; &lt; &gt; &quot; &#39;
 ///
 ///   unescape_html("&lt;div&gt;") -> "<div>"
 ///   unescape_html("Tom &amp; Jerry") -> "Tom & Jerry"

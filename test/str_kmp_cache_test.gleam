@@ -1,4 +1,4 @@
-import gleam/list
+import gleam/int
 import str
 
 pub fn kmp_maps_reuse_index_test() {
@@ -28,5 +28,5 @@ pub fn kmp_maps_reuse_search_all_test() {
 }
 
 fn repeat(s: String, n: Int) -> String {
-  list.fold(list.range(1, n), "", fn(acc, _) { acc <> s })
+  int.range(from: 1, to: n + 1, with: "", run: fn(acc, _) { acc <> s })
 }

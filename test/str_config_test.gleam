@@ -1,4 +1,4 @@
-import gleam/list
+import gleam/int
 import str
 
 // removed unused import
@@ -8,7 +8,7 @@ pub fn smart_search_default_test() {
 }
 
 fn make_repeat(s: String, n: Int) -> String {
-  list.fold(list.range(1, n), "", fn(acc, _) { acc <> s })
+  int.range(from: 1, to: n + 1, with: "", run: fn(acc, _) { acc <> s })
 }
 
 pub fn choose_strategy_min_pattern_test() {

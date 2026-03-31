@@ -1,4 +1,4 @@
-import gleam/list
+import gleam/int
 import str
 
 pub fn choose_strategy_small_random_test() {
@@ -31,5 +31,5 @@ pub fn choose_strategy_empty_pattern_test() {
 }
 
 fn repeat(s: String, n: Int) -> String {
-  list.fold(list.range(1, n), "", fn(acc, _) { acc <> s })
+  int.range(from: 1, to: n + 1, with: "", run: fn(acc, _) { acc <> s })
 }
