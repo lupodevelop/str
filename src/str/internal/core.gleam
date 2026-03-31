@@ -189,7 +189,11 @@ fn repeat_str(s: String, n: Int) -> String {
   }
 }
 
-fn repeat_str_loop(s: String, n: Int, acc: string_tree.StringTree) -> string_tree.StringTree {
+fn repeat_str_loop(
+  s: String,
+  n: Int,
+  acc: string_tree.StringTree,
+) -> string_tree.StringTree {
   case n <= 0 {
     True -> acc
     False -> repeat_str_loop(s, n - 1, string_tree.append(acc, s))

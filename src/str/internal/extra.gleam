@@ -419,7 +419,11 @@ fn is_lower_char(g: String) -> Bool {
   }
 }
 
-fn camel_to_snake_loop(chars: List(String), acc: String, prev_char: String) -> String {
+fn camel_to_snake_loop(
+  chars: List(String),
+  acc: String,
+  prev_char: String,
+) -> String {
   case chars {
     [] -> acc
     [c, ..rest] -> {
@@ -429,10 +433,14 @@ fn camel_to_snake_loop(chars: List(String), acc: String, prev_char: String) -> S
         [n, ..] -> is_lower_char(n)
         [] -> False
       }
-      
-      let insert_underscore = {prev_is_lower && c_is_upper} || {is_upper_char(prev_char) && c_is_upper && next_is_lower}
-      
-      let new_acc = case insert_underscore && acc != "" && !string.ends_with(acc, "_") {
+
+      let insert_underscore =
+        { prev_is_lower && c_is_upper }
+        || { is_upper_char(prev_char) && c_is_upper && next_is_lower }
+
+      let new_acc = case
+        insert_underscore && acc != "" && !string.ends_with(acc, "_")
+      {
         True -> acc <> "_" <> string.lowercase(c)
         False -> acc <> string.lowercase(c)
       }
@@ -464,12 +472,16 @@ pub fn snake_to_camel(s: String) -> String {
   case parts {
     [] -> ""
     [first, ..rest] -> {
-      let camel_rest = list.fold(rest, "", fn(acc, part) {
-        case string.is_empty(part) {
-          True -> acc
-          False -> acc <> string.uppercase(string.slice(part, 0, 1)) <> string.slice(part, 1, string.length(part) - 1)
-        }
-      })
+      let camel_rest =
+        list.fold(rest, "", fn(acc, part) {
+          case string.is_empty(part) {
+            True -> acc
+            False ->
+              acc
+              <> string.uppercase(string.slice(part, 0, 1))
+              <> string.slice(part, 1, string.length(part) - 1)
+          }
+        })
       string.lowercase(first) <> camel_rest
     }
   }
@@ -484,7 +496,10 @@ pub fn snake_to_pascal(s: String) -> String {
   list.fold(parts, "", fn(acc, part) {
     case string.is_empty(part) {
       True -> acc
-      False -> acc <> string.uppercase(string.slice(part, 0, 1)) <> string.slice(part, 1, string.length(part) - 1)
+      False ->
+        acc
+        <> string.uppercase(string.slice(part, 0, 1))
+        <> string.slice(part, 1, string.length(part) - 1)
     }
   })
 }
