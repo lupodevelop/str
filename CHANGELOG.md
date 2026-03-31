@@ -2,6 +2,20 @@
 
 All notable changes to this project are documented in this file.
 
+## [2.1.0] - 2026-03-31
+
+### Added
+
+- `is_mixed_case`: validation function to check if a string contains both uppercase and lowercase characters.
+- Dedicated case converters: `camel_to_snake`, `pascal_to_snake`, `snake_to_camel`, `snake_to_pascal` that don't aggressively strip non-alphanumeric characters.
+
+### Changed
+
+- Enhanced `words` to handle additional Unicode whitespace characters (non-breaking space, en-space, em-space, thin space, zero-width space, ideographic space).
+- Optimized string concatenation in `repeat_str` by replacing basic concatenation with `gleam/string_tree` for better performance on large string repetitions.
+
+---
+
 ## [2.0.1] - 2026-02-28
 
 ### Fixed

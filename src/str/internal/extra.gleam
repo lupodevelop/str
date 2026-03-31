@@ -394,6 +394,100 @@ pub fn to_title_case(s: String) -> String {
     })
   string.join(capitalized, " ")
 }
+
+// ----------------------------------------------------------------------------
+// Dedicated, Non-Destructive Case Converters
+// ----------------------------------------------------------------------------
+
+fn is_upper_char(g: String) -> Bool {
+  case string.to_utf_codepoints(g) {
+    [cp] -> {
+      let code = string.utf_codepoint_to_int(cp)
+      code >= 0x41 && code <= 0x5A
+    }
+    _ -> False
+  }
+}
+
+fn is_lower_char(g: String) -> Bool {
+  case string.to_utf_codepoints(g) {
+    [cp] -> {
+      let code = string.utf_codepoint_to_int(cp)
+      code >= 0x61 && code <= 0x7A
+    }
+    _ -> False
+  }
+}
+
+fn camel_to_snake_loop(chars: List(String), acc: String, prev_char: String) -> String {
+  case chars {
+    [] -> acc
+    [c, ..rest] -> {
+      let c_is_upper = is_upper_char(c)
+      let prev_is_lower = is_lower_char(prev_char)
+      let next_is_lower = case rest {
+        [n, ..] -> is_lower_char(n)
+        [] -> False
+      }
+      
+      let insert_underscore = {prev_is_lower && c_is_upper} || {is_upper_char(prev_char) && c_is_upper && next_is_lower}
+      
+      let new_acc = case insert_underscore && acc != "" && !string.ends_with(acc, "_") {
+        True -> acc <> "_" <> string.lowercase(c)
+        False -> acc <> string.lowercase(c)
+      }
+      camel_to_snake_loop(rest, new_acc, c)
+    }
+  }
+}
+
+/// Converts camelCase or PascalCase to snake_case without aggressively stripping characters.
+///
+///   camel_to_snake("camelCase") -> "camel_case"
+///   camel_to_snake("XMLHttpRequest") -> "xml_http_request"
+///
+pub fn camel_to_snake(s: String) -> String {
+  camel_to_snake_loop(string.to_graphemes(s), "", "")
+}
+
+/// Alias for camel_to_snake.
+pub fn pascal_to_snake(s: String) -> String {
+  camel_to_snake(s)
+}
+
+/// Converts snake_case to camelCase without aggressively stripping characters.
+///
+///   snake_to_camel("snake_case_name") -> "snakeCaseName"
+///
+pub fn snake_to_camel(s: String) -> String {
+  let parts = string.split(s, "_")
+  case parts {
+    [] -> ""
+    [first, ..rest] -> {
+      let camel_rest = list.fold(rest, "", fn(acc, part) {
+        case string.is_empty(part) {
+          True -> acc
+          False -> acc <> string.uppercase(string.slice(part, 0, 1)) <> string.slice(part, 1, string.length(part) - 1)
+        }
+      })
+      string.lowercase(first) <> camel_rest
+    }
+  }
+}
+
+/// Converts snake_case to PascalCase without aggressively stripping characters.
+///
+///   snake_to_pascal("snake_case_name") -> "SnakeCaseName"
+///
+pub fn snake_to_pascal(s: String) -> String {
+  let parts = string.split(s, "_")
+  list.fold(parts, "", fn(acc, part) {
+    case string.is_empty(part) {
+      True -> acc
+      False -> acc <> string.uppercase(string.slice(part, 0, 1)) <> string.slice(part, 1, string.length(part) - 1)
+    }
+  })
+}
 // Note: normalizer helpers (NFC/NFD/NFKC/NFKD) are intentionally not
 // exported by the `str` library to avoid introducing an OTP dependency.
 // If you need to use OTP normalization, define a small helper in your
