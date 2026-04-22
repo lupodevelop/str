@@ -397,6 +397,19 @@ pub fn ensure_suffix(text: String, suffix: String) -> String {
 }
 
 /// Strips specified characters from both ends.
+///
+/// `chars` is treated as a **set of individual graphemes** to remove, not
+/// as a literal substring. Each grapheme in `chars` is removed independently
+/// from both ends of `text` until a grapheme not in the set is found.
+///
+/// ## Examples
+///
+/// ```gleam
+/// strip("..hello..", ".")
+/// // -> "hello"
+/// strip("xyxhelloxyxy", "xy")
+/// // -> "hello"   // removes any 'x' or 'y' from both ends
+/// ```
 pub fn strip(text: String, chars: String) -> String {
   core.strip(text, chars)
 }
@@ -486,13 +499,20 @@ pub fn distance(a: String, b: String) -> Int {
   core.distance(a, b)
 }
 
-/// Calculates similarity as a percentage (0.0 to 1.0).
+/// Calculates similarity as a percentage (0.0 to 1.0) using normalized
+/// Levenshtein distance: `1.0 - distance(a, b) / max(len(a), len(b))`.
+/// Returns 1.0 for identical strings, 0.0 for fully different strings of
+/// equal length.
 ///
 /// ## Examples
 ///
 /// ```gleam
 /// similarity("hello", "hallo")
 /// // -> 0.8
+/// similarity("abc", "xyz")
+/// // -> 0.0
+/// similarity("", "")
+/// // -> 1.0
 /// ```
 pub fn similarity(a: String, b: String) -> Float {
   core.similarity(a, b)
@@ -700,6 +720,23 @@ pub fn slugify_with_normalizer(text: String, normalizer) -> String {
 }
 
 /// Creates slug with detailed options.
+///
+/// - `max_len`: maximum number of tokens (words) to include. Pass `-1` for
+///   no limit. Pass `0` to produce an empty string.
+/// - `sep`: separator between tokens (default `"-"` in `slugify`).
+/// - `preserve_unicode`: when `True`, keeps non-ASCII characters instead of
+///   folding them to ASCII equivalents.
+///
+/// ## Examples
+///
+/// ```gleam
+/// slugify_opts("one two three", 2, "-", False)
+/// // -> "one-two"
+/// slugify_opts("Hello World", -1, "_", False)
+/// // -> "hello_world"
+/// slugify_opts("Héllo", -1, "-", True)
+/// // -> "héllo"
+/// ```
 pub fn slugify_opts(
   text: String,
   max_len: Int,
@@ -739,6 +776,25 @@ pub fn ascii_fold(text: String) -> String {
 }
 
 /// ASCII folding without Unicode decomposition.
+///
+/// Unlike `ascii_fold`, this function skips the NFD decomposition step and
+/// applies only the direct replacement table. Use this when the input is
+/// already NFC-normalized and you want to avoid re-decomposing it, or when
+/// you need to preserve combining marks that decomposition would expose.
+///
+/// Precomposed characters in the replacement table (e.g. `"é"` → `"e"`) are
+/// still converted. Characters not in the table are left unchanged.
+///
+/// ## Examples
+///
+/// ```gleam
+/// ascii_fold_no_decompose("café")
+/// // -> "cafe"   // "é" is in the precomposed table
+/// ascii_fold("straße")
+/// // -> "strasse"  // ligature handled by decompose path
+/// ascii_fold_no_decompose("straße")
+/// // -> "strasse"  // also in the table directly
+/// ```
 pub fn ascii_fold_no_decompose(text: String) -> String {
   extra.ascii_fold_no_decompose(text)
 }
@@ -797,7 +853,9 @@ pub fn camel_to_snake(text: String) -> String {
   extra.camel_to_snake(text)
 }
 
-/// Alias for camel_to_snake.
+/// Converts PascalCase to snake_case. Alias for `camel_to_snake` — both
+/// functions use the same implementation since the conversion rules are
+/// identical for PascalCase and camelCase.
 pub fn pascal_to_snake(text: String) -> String {
   extra.pascal_to_snake(text)
 }
@@ -818,8 +876,14 @@ pub fn snake_to_pascal(text: String) -> String {
 
 /// Pure Gleam grapheme tokenizer (approximates Unicode segmentation).
 ///
-/// This is an experimental pure-Gleam implementation that approximates
-/// Unicode grapheme cluster segmentation without external dependencies.
+/// **WARNING: experimental.** This implementation approximates Unicode
+/// grapheme cluster segmentation and **may produce incorrect results** on
+/// complex sequences such as ZWJ emoji, skin-tone modifiers, or flag
+/// sequences. For correctness, use `chars_stdlib` instead.
+///
+/// Only use this function if you have a specific reason to avoid the BEAM
+/// stdlib (e.g., compiling to JavaScript where BEAM primitives are absent)
+/// and you have verified the edge cases that matter to you.
 pub fn chars(text: String) -> List(String) {
   tokenize.chars(text)
 }
