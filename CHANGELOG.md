@@ -2,6 +2,30 @@
 
 All notable changes to this project are documented in this file.
 
+## [2.1.1] - 2026-04-22
+
+### Documentation
+
+- **`similarity`**: documented the formula (normalized Levenshtein:
+  `1.0 - distance(a, b) / max(len(a), len(b))`). Added edge-case examples
+  (`""` / `""` → 1.0, fully different → 0.0).
+- **`ascii_fold_no_decompose`**: explained when to use it vs `ascii_fold` —
+  skips NFD decomposition, applies only the precomposed replacement table.
+  Added concrete examples.
+- **`strip`**: clarified that `chars` is a **set of graphemes**, not a
+  literal substring (analogous to Python's `str.strip`).
+- **`slugify_opts`**: documented that `max_len: -1` means no limit;
+  `max_len: 0` produces an empty string. Added examples for all options.
+- **`chars`**: promoted the experimental warning to be more prominent —
+  function may produce incorrect results on complex Unicode sequences.
+  Directs users to `chars_stdlib` for correctness.
+- **`pascal_to_snake`**: noted explicitly that it is an alias for
+  `camel_to_snake` with identical behaviour.
+- **README**: fixed `fill` example — was showing string `"both"` instead
+  of the `Both` type constructor.
+
+---
+
 ## [2.1.0] - 2026-03-31
 
 ### Added
